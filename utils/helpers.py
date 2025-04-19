@@ -1,4 +1,7 @@
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+
+le = LabelEncoder()
 
 
 def split_data(df, target_column, test_size=0.2, random_state=42):
@@ -7,9 +10,11 @@ def split_data(df, target_column, test_size=0.2, random_state=42):
         df[target_column]
         .str.strip()
         .str.lower()
-        .map({"positive": 2, "neutral": 1, "negative": 0})
+        # .map({"positive": 2, "neutral": 1, "negative": 0})
     )
+    y_encoded = le.fit_transform(y)
+
     x_train, x_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=random_state
+        X, y_encoded, test_size=test_size, random_state=random_state
     )
-    return x_train, x_test, y_train, y_test
+    return x_train, x_test, y_train, y_test, le

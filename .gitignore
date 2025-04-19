@@ -4,6 +4,6 @@ Sentiment Analysis Dataset
 .venv
 Project Checkpoint 2.docx
 *.html
-data
 __pycache__
 *.csv
+develop.ipynb

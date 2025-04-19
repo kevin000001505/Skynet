@@ -28,38 +28,39 @@ class RandomForestModel:
     def predict_proba(self, x_test):
         return self.pipeline.predict_proba(x_test)
 
-    def filter_by_threshold(self, y_pred, y_true, threshold=0.5):
+    def filter_by_threshold(self, y_pred, y_true, threshold=0.5, labels_encoder=None):
         confidence_mask = np.any(y_pred > threshold, axis=1)
         true_labels_filtered = y_true[confidence_mask]
 
         filtered_probabilities = y_pred[confidence_mask]
-        # predicted_labels_filtered = np.argmax(filtered_probabilities, axis=1)
         predicted_labels_filtered = self.model_class[
             np.argmax(filtered_probabilities, axis=1)
         ]
+
         return {
-            "y_true": true_labels_filtered,
-            "y_pred": predicted_labels_filtered,
+            "y_true": labels_encoder.inverse_transform(true_labels_filtered),
+            "y_pred": labels_encoder.inverse_transform(predicted_labels_filtered),
             "threshold": threshold,
         }
 
     def save_low_confidence_to_csv(
         self,
         x,
-        y,
         threshold=0.5,
         csv_path="low_confidence_samples/{dataset_name}.csv",
         dataset_name="dataset",
+        raw_data=None,
     ):
         csv_path = csv_path.format(dataset_name=dataset_name)
         y_pred = self.pipeline.predict_proba(x)
-        low_confidence_mask = np.max(y_pred, axis=1) <= threshold
-        x_low = x[low_confidence_mask]
-        y_low = y[low_confidence_mask]
+        high_confidence_mask = np.max(y_pred, axis=1) > threshold
+        high_confidence_indexs = np.nonzero(high_confidence_mask)[0].tolist()
+        low_confidence_data = raw_data.drop(high_confidence_indexs).reset_index(
+            drop=True
+        )
+
         try:
-            df_low = pd.DataFrame(x_low, columns=["text"])
-            df_low["sentiment"] = y_low
-            df_low.to_csv(csv_path, index=False)
+            low_confidence_data.to_csv(csv_path, index=False)
             logging.info(f"{dataset_name}: Low confidence samples saved to {csv_path}")
         except Exception as e:
             logging.error(f"Error saving low confidence samples: {e}")

@@ -1,11 +1,13 @@
 import pandas as pd
-from tqdm import tqdm
+from tqdm.auto import tqdm
+import logging
 
 # from spacytextblob.spacytextblob import SpacyTextBlob
 import spacy
 import string
 import re
 
+logger = logging.getLogger(__name__)
 tqdm.pandas()
 
 
@@ -16,11 +18,12 @@ class BaseDataCleaner:
 
     def __init__(self):
         self.nlp = spacy.load("en_core_web_sm")
-        # self.nlp.add_pipe("spacytextblob")
+        # self.nlp.add_pipe("spacytextblob") Further implementation needed
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
-        df.dropna(inplace=True)  # Drop rows with missing values
-        df.drop_duplicates(inplace=True)  # Drop duplicate rows
+        logging.info(f"NaN values before cleaning: {df.isna().sum()}")
+        df.dropna(inplace=True)
+        df.drop_duplicates(inplace=True)
         return df
 
     def clean_text(self, text: str) -> str:
@@ -31,11 +34,13 @@ class BaseDataCleaner:
         clean_tokens = [
             token.lemma_.lower()
             for token in doc
-            if token.text not in string.punctuation  # remove punctuation
-            and not token.is_stop  # remove stopwords
-            and token.lemma_ != "-PRON-"  # exclude pronouns
+            if token.text not in string.punctuation
+            and not token.is_stop
+            and token.lemma_ != "-PRON-"
         ]
-        return " ".join(clean_tokens)
+        if len(clean_tokens) > 0:
+            return " ".join(clean_tokens)
+        return text
 
 
 class MovieDataCleaner(BaseDataCleaner):
@@ -43,7 +48,6 @@ class MovieDataCleaner(BaseDataCleaner):
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        # df["preprocess_text"] = df["review"].apply(self.clean_text)
         df["preprocess_text"] = df["review"].progress_apply(self.clean_text)
         df = df[df["preprocess_text"].str.split().str.len() > 0]
         return df
@@ -54,7 +58,6 @@ class NormalTextCleaner(BaseDataCleaner):
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        # df["preprocess_text"] = df["text"].apply(self.clean_text)
         df["preprocess_text"] = df["text"].progress_apply(self.clean_text)
         df = df[df["preprocess_text"].str.split().str.len() > 0]
         return df
@@ -65,7 +68,6 @@ class TwitterDataCleaner(BaseDataCleaner):
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        # df["preprocess_text"] = df["review"].apply(self.clean_text)
         df["preprocess_text"] = df["review"].progress_apply(self.clean_text)
         df = df[df["preprocess_text"].str.split().str.len() > 0]
         return df
@@ -76,17 +78,16 @@ class YelpDataCleaner(BaseDataCleaner):
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        # df["preprocess_text"] = df["review"].apply(self.clean_text)
         df["preprocess_text"] = df["review"].progress_apply(self.clean_text)
         df = df[df["preprocess_text"].str.split().str.len() > 0]
         return df
 
 
 class TestingDataCleaner(BaseDataCleaner):
+
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        # df["preprocess_text"] = df["review"].apply(self.clean_text)
         df["preprocess_text"] = df["review"].progress_apply(self.clean_text)
         df = df[df["preprocess_text"].str.split().str.len() > 0]
         return df

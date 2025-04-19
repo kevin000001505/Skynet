@@ -37,17 +37,13 @@ def run_pipeline_for_dataset(dataset_name: str, config):
         f"Data cleaned using {cleaner_class.__name__}. Shape: {cleaned_df.shape}"
     )
     target_column = config.TARGET_COLUMNS.get(dataset_name)
-    # 3. Prepare Features (X) and Target (y)
+
     if target_column not in cleaned_df.columns:
         logger.error(
             f"Target column '{target_column}' not found in cleaned data for {dataset_name}. Skipping."
         )
         return
-    x_train, x_test, y_train, y_test = split_data(
-        cleaned_df, target_column
-    )  # Use the split_data function from utils/helpers.py
-
-    # --- Add feature validation/selection if needed ---
+    x_train, x_test, y_train, y_test, le = split_data(cleaned_df, target_column)
 
     # 4. Train Model
     model = RandomForestModel(params=config.RANDOM_FOREST_PARAMS)
@@ -59,14 +55,18 @@ def run_pipeline_for_dataset(dataset_name: str, config):
     logger.info("Probabilities predicted.")
 
     filtered_output = model.filter_by_threshold(
-        y_pred=probabilities, y_true=y_test, threshold=config.PROBABILITY_THRESHOLD
+        y_pred=probabilities,
+        y_true=y_test,
+        threshold=config.PROBABILITY_THRESHOLD,
+        labels_encoder=le,
     )
     model.save_low_confidence_to_csv(
-        x_train, y_train, config.PROBABILITY_THRESHOLD, dataset_name=dataset_name
+        x=cleaned_df["preprocess_text"],
+        threshold=config.PROBABILITY_THRESHOLD,
+        dataset_name=dataset_name,
+        raw_data=raw_df,
     )
-    model.save_low_confidence_to_csv(
-        x_test, y_test, config.PROBABILITY_THRESHOLD, dataset_name=dataset_name
-    )
+
     logger.info("Low confidence samples saved.")
 
     # 6. Save Model

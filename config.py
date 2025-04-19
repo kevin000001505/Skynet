@@ -33,7 +33,7 @@ DATA_LOCATIONS = {
     ],
     "Yelp": [
         DATA_DIR + "yelp_review_polarity_csv/train.csv",
-        DATA_DIR + "yelp_review_polarity_csv/train.csv",
+        DATA_DIR + "yelp_review_polarity_csv/test.csv",
     ],
 }
 
@@ -49,5 +49,6 @@ RANDOM_FOREST_PARAMS = {
     "min_samples_leaf": 1,
     "max_features": "sqrt",
     "random_state": 42,
+    "n_jobs": -1,
 }
 PROBABILITY_THRESHOLD = 0.7
