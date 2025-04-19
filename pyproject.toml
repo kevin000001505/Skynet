@@ -16,6 +16,10 @@ seaborn = "^0.13.2"
 torch = "^2.6.0"
 torchvision = "^0.21.0"
 torchaudio = "^2.6.0"
+spacytextblob = "^5.0.0"
+black = "^25.1.0"
+notebook = "^7.4.0"
+joblib = "^1.4.2"
 
 
 [build-system]
