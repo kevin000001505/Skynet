@@ -7,3 +7,4 @@ Project Checkpoint 2.docx
 __pycache__
 *.csv
 develop.ipynb
+data/yelp_review_polarity_csv/readme.txt
