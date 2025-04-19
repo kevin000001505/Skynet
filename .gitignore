@@ -3,3 +3,8 @@
 Sentiment Analysis Dataset
 .venv
 Project Checkpoint 2.docx
+*.html
+__pycache__
+*.csv
+develop.ipynb
+data/yelp_review_polarity_csv/readme.txt
