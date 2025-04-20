@@ -1,4 +1,4 @@
-from data_processing.loader import load_csv_data  # Import the loading function
+from data_processing.loader import load_csv_data, load_big_data_csv
 from utils.helpers import split_data
 from modeling.random_forest import RandomForestModel
 import logging
@@ -65,6 +65,49 @@ def run_pipeline_for_dataset(dataset_name: str, config):
         threshold=config.PROBABILITY_THRESHOLD,
         dataset_name=dataset_name,
         raw_data=raw_df,
+    )
+
+    logger.info("Low confidence samples saved.")
+
+    # 6. Save Model
+    models_dir = os.path.join(config.PROJECT_ROOT, "models")
+    model.save_model(models_dir, dataset_name)
+
+    return filtered_output
+
+
+def big_data_pipeline(dataset_name: str, config):
+    """Runs the pipeline for big data."""
+    big_data = load_big_data_csv()
+    if big_data is None:
+        raise ValueError("Failed to load big data CSV.")
+    cleaner = config.CLEANING_STRATEGIES.get("default")()
+    cleaned_df = cleaner.big_data_clean(big_data.copy())
+    logger.info(f"Big Data Shape: {cleaned_df.shape}")
+    target_column = config.TARGET_COLUMNS.get("default")
+    breakpoint()
+    x_train, x_test, y_train, y_test, le = split_data(cleaned_df, target_column)
+
+    # 4. Train Model
+    model = RandomForestModel(params=config.RANDOM_FOREST_PARAMS)
+    model.train(x_train, y_train)
+    logger.info("Random Forest model trained.")
+
+    # 5. Predict Probabilities
+    probabilities = model.predict_proba(x_test)
+    logger.info("Probabilities predicted.")
+
+    filtered_output = model.filter_by_threshold(
+        y_pred=probabilities,
+        y_true=y_test,
+        threshold=config.PROBABILITY_THRESHOLD,
+        labels_encoder=le,
+    )
+    model.save_low_confidence_to_csv(
+        x=cleaned_df["preprocess_text"],
+        threshold=config.PROBABILITY_THRESHOLD,
+        dataset_name=dataset_name,
+        raw_data=big_data,
     )
 
     logger.info("Low confidence samples saved.")

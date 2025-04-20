@@ -39,6 +39,26 @@ class BaseDataCleaner:
             return " ".join(clean_tokens)
         return doc.text
 
+    def big_data_clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        processed_texts = []
+        df = self.clean(df)
+        print(CLEANING_TEXT_MESSAGE)
+        texts = df["text"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        text_list = texts.tolist()
+        for doc in tqdm(
+            self.nlp.pipe(
+                text_list,
+                batch_size=300,
+                n_process=8,
+            ),
+            total=len(text_list),
+        ):
+            processed_texts.append(self._process_doc(doc))
+
+        df["preprocess_text"] = processed_texts
+        df = df[df["preprocess_text"].str.split().str.len() > 0]
+        return df
+
 
 class MovieDataCleaner(BaseDataCleaner):
 
@@ -49,7 +69,12 @@ class MovieDataCleaner(BaseDataCleaner):
         texts = df["review"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
         text_list = texts.tolist()
         for doc in tqdm(
-            self.nlp.pipe(text_list, batch_size=self.batch_size), total=len(text_list)
+            self.nlp.pipe(
+                text_list,
+                batch_size=self.batch_size,
+                n_process=8,
+            ),
+            total=len(text_list),
         ):
             processed_texts.append(self._process_doc(doc))
 
@@ -67,7 +92,12 @@ class NormalTextCleaner(BaseDataCleaner):
         texts = df["text"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
         text_list = texts.tolist()
         for doc in tqdm(
-            self.nlp.pipe(text_list, batch_size=self.batch_size), total=len(text_list)
+            self.nlp.pipe(
+                text_list,
+                batch_size=self.batch_size,
+                n_process=8,
+            ),
+            total=len(text_list),
         ):
             processed_texts.append(self._process_doc(doc))
 
@@ -85,7 +115,12 @@ class TwitterDataCleaner(BaseDataCleaner):
         texts = df["review"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
         text_list = texts.tolist()
         for doc in tqdm(
-            self.nlp.pipe(text_list, batch_size=self.batch_size), total=len(text_list)
+            self.nlp.pipe(
+                text_list,
+                batch_size=self.batch_size,
+                n_process=8,
+            ),
+            total=len(text_list),
         ):
             processed_texts.append(self._process_doc(doc))
 
@@ -104,7 +139,12 @@ class YelpDataCleaner(BaseDataCleaner):
         texts = df["review"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
         text_list = texts.tolist()
         for doc in tqdm(
-            self.nlp.pipe(text_list, batch_size=self.batch_size), total=len(text_list)
+            self.nlp.pipe(
+                text_list,
+                batch_size=self.batch_size,
+                n_process=8,
+            ),
+            total=len(text_list),
         ):
             processed_texts.append(self._process_doc(doc))
 
@@ -122,7 +162,12 @@ class TestingDataCleaner(BaseDataCleaner):
         texts = df["review"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
         text_list = texts.tolist()
         for doc in tqdm(
-            self.nlp.pipe(text_list, batch_size=self.batch_size), total=len(text_list)
+            self.nlp.pipe(
+                text_list,
+                batch_size=self.batch_size,
+                n_process=8,
+            ),
+            total=len(text_list),
         ):
             processed_texts.append(self._process_doc(doc))
 
