@@ -27,24 +27,20 @@ class BaseDataCleaner:
         return df
 
     def clean_text(self, text: str) -> str:
-        try:
-            if not isinstance(text, str):
-                return ""
-            text = re.sub(r"https?://.+", "", text)
-            doc = self.nlp(text)
-            clean_tokens = [
-                token.lemma_.lower()
-                for token in doc
-                if token.text not in string.punctuation
-                and not token.is_stop
-                and token.lemma_ != "-PRON-"
-            ]
-            if len(clean_tokens) > 0:
-                return " ".join(clean_tokens)
-            return text
-        except Exception as e:
-            logger.error(f"Error cleaning text: {e}")
-            return text
+        if not isinstance(text, str):
+            return ""
+        text = re.sub(r"https?://.+", "", text)
+        doc = self.nlp(text)
+        clean_tokens = [
+            token.lemma_.lower()
+            for token in doc
+            if token.text not in string.punctuation
+            and not token.is_stop
+            and token.lemma_ != "-PRON-"
+        ]
+        if len(clean_tokens) > 0:
+            return " ".join(clean_tokens)
+        return text
 
 
 class MovieDataCleaner(BaseDataCleaner):
