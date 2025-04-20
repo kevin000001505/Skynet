@@ -78,6 +78,7 @@ class YelpDataCleaner(BaseDataCleaner):
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
+        df["sentiment"] = df["sentiment"].map({2: "positive", 1: "negative"})
         df["preprocess_text"] = df["review"].progress_apply(self.clean_text)
         df = df[df["preprocess_text"].str.split().str.len() > 0]
         return df
