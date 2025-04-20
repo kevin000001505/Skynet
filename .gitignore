@@ -6,7 +6,6 @@ Project Checkpoint 2.docx
 *.html
 __pycache__
 *.csv
-*.ipynb
 data/yelp_review_polarity_csv/readme.txt
 *.pkl
 models/Testing.pkl
