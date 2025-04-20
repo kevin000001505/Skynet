@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 def main():
     # List of datasets to process
     datasets = [
-        "Testing",
+        # "Testing",
         "Normal",
         "Twitter",
         "Movie",
