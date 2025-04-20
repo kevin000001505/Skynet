@@ -27,20 +27,24 @@ class BaseDataCleaner:
         return df
 
     def clean_text(self, text: str) -> str:
-        if not isinstance(text, str):
-            return ""
-        text = re.sub(r"https?://.+", "", text)
-        doc = self.nlp(text)
-        clean_tokens = [
-            token.lemma_.lower()
-            for token in doc
-            if token.text not in string.punctuation
-            and not token.is_stop
-            and token.lemma_ != "-PRON-"
-        ]
-        if len(clean_tokens) > 0:
-            return " ".join(clean_tokens)
-        return text
+        try:
+            if not isinstance(text, str):
+                return ""
+            text = re.sub(r"https?://.+", "", text)
+            doc = self.nlp(text)
+            clean_tokens = [
+                token.lemma_.lower()
+                for token in doc
+                if token.text not in string.punctuation
+                and not token.is_stop
+                and token.lemma_ != "-PRON-"
+            ]
+            if len(clean_tokens) > 0:
+                return " ".join(clean_tokens)
+            return text
+        except Exception as e:
+            logger.error(f"Error cleaning text: {e}")
+            return text
 
 
 class MovieDataCleaner(BaseDataCleaner):
@@ -78,6 +82,7 @@ class YelpDataCleaner(BaseDataCleaner):
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
+        df["sentiment"] = df["sentiment"].map({2: "positive", 1: "negative"})
         df["preprocess_text"] = df["review"].progress_apply(self.clean_text)
         df = df[df["preprocess_text"].str.split().str.len() > 0]
         return df
