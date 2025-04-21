@@ -24,7 +24,7 @@ CLEANING_STRATEGIES = {
 
 
 DATA_LOCATIONS = {
-    "Testing": [DATA_DIR + "testing.csv"],
+    # "Testing": [DATA_DIR + "testing.csv"],
     "Twitter": [DATA_DIR + "Twitter Training Data.csv"],
     "Movie": [DATA_DIR + "IMDB Dataset.csv"],
     "Normal": [
@@ -43,6 +43,7 @@ TARGET_COLUMNS = {
     "Movie": "sentiment",
     "Normal": "sentiment",
     "Yelp": "sentiment",
+    "default": "sentiment",
 }
 
 RANDOM_FOREST_PARAMS = {
@@ -51,4 +52,4 @@ RANDOM_FOREST_PARAMS = {
     "random_state": 42,
     "n_jobs": -1,
 }
-PROBABILITY_THRESHOLD = 0.7
+PROBABILITY_THRESHOLD = 0.6

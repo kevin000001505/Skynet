@@ -16,3 +16,8 @@ poetry shell
 # run the main code
 python main.py
 ```
+
+# If you want to combine all data and run once
+```bash
+python main.py --bigdata
+```

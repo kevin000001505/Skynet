@@ -16,8 +16,9 @@ CLEANING_TEXT_MESSAGE = "Cleaning text data..."
 
 class BaseDataCleaner:
 
-    def __init__(self):
-        self.nlp = spacy.load("en_core_web_sm")
+    def __init__(self, batch_size=300):
+        self.nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
+        self.batch_size = batch_size
         # self.nlp.add_pipe("spacytextblob") Further implementation needed
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -26,29 +27,56 @@ class BaseDataCleaner:
         df.drop_duplicates(inplace=True)
         return df
 
-    def clean_text(self, text: str) -> str:
-        if not isinstance(text, str):
-            return ""
-        text = re.sub(r"https?://.+", "", text)
-        doc = self.nlp(text)
+    def _process_doc(self, doc):
         clean_tokens = [
-            token.lemma_.lower()
+            f"{token.lemma_.lower()} {token.tag_}"
             for token in doc
-            if token.text not in string.punctuation
-            and not token.is_stop
-            and token.lemma_ != "-PRON-"
+            if token.text not in string.punctuation and not token.is_stop
         ]
         if len(clean_tokens) > 0:
             return " ".join(clean_tokens)
-        return text
+        return doc.text
+
+    def big_data_clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        processed_texts = []
+        df = self.clean(df)
+        print(CLEANING_TEXT_MESSAGE)
+        texts = df["text"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        text_list = texts.tolist()
+        for doc in tqdm(
+            self.nlp.pipe(
+                text_list,
+                batch_size=self.batch_size,
+                n_process=8,
+            ),
+            total=len(text_list),
+        ):
+            processed_texts.append(self._process_doc(doc))
+
+        df["preprocess_text"] = processed_texts
+        df = df[df["preprocess_text"].str.split().str.len() > 0]
+        return df
 
 
 class MovieDataCleaner(BaseDataCleaner):
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        processed_texts = []
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        df["preprocess_text"] = df["review"].progress_apply(self.clean_text)
+        texts = df["review"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        text_list = texts.tolist()
+        for doc in tqdm(
+            self.nlp.pipe(
+                text_list,
+                batch_size=self.batch_size,
+                n_process=8,
+            ),
+            total=len(text_list),
+        ):
+            processed_texts.append(self._process_doc(doc))
+
+        df["preprocess_text"] = processed_texts
         df = df[df["preprocess_text"].str.split().str.len() > 0]
         return df
 
@@ -56,9 +84,22 @@ class MovieDataCleaner(BaseDataCleaner):
 class NormalTextCleaner(BaseDataCleaner):
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        processed_texts = []
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        df["preprocess_text"] = df["text"].progress_apply(self.clean_text)
+        texts = df["text"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        text_list = texts.tolist()
+        for doc in tqdm(
+            self.nlp.pipe(
+                text_list,
+                batch_size=self.batch_size,
+                n_process=8,
+            ),
+            total=len(text_list),
+        ):
+            processed_texts.append(self._process_doc(doc))
+
+        df["preprocess_text"] = processed_texts
         df = df[df["preprocess_text"].str.split().str.len() > 0]
         return df
 
@@ -66,9 +107,22 @@ class NormalTextCleaner(BaseDataCleaner):
 class TwitterDataCleaner(BaseDataCleaner):
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        processed_texts = []
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        df["preprocess_text"] = df["review"].progress_apply(self.clean_text)
+        texts = df["review"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        text_list = texts.tolist()
+        for doc in tqdm(
+            self.nlp.pipe(
+                text_list,
+                batch_size=self.batch_size,
+                n_process=8,
+            ),
+            total=len(text_list),
+        ):
+            processed_texts.append(self._process_doc(doc))
+
+        df["preprocess_text"] = processed_texts
         df = df[df["preprocess_text"].str.split().str.len() > 0]
         return df
 
@@ -76,10 +130,23 @@ class TwitterDataCleaner(BaseDataCleaner):
 class YelpDataCleaner(BaseDataCleaner):
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        processed_texts = []
         df = super().clean(df)
-        print(CLEANING_TEXT_MESSAGE)
         df["sentiment"] = df["sentiment"].map({2: "positive", 1: "negative"})
-        df["preprocess_text"] = df["review"].progress_apply(self.clean_text)
+        print(CLEANING_TEXT_MESSAGE)
+        texts = df["review"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        text_list = texts.tolist()
+        for doc in tqdm(
+            self.nlp.pipe(
+                text_list,
+                batch_size=self.batch_size,
+                n_process=8,
+            ),
+            total=len(text_list),
+        ):
+            processed_texts.append(self._process_doc(doc))
+
+        df["preprocess_text"] = processed_texts
         df = df[df["preprocess_text"].str.split().str.len() > 0]
         return df
 
@@ -87,8 +154,21 @@ class YelpDataCleaner(BaseDataCleaner):
 class TestingDataCleaner(BaseDataCleaner):
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
+        processed_texts = []
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        df["preprocess_text"] = df["review"].progress_apply(self.clean_text)
+        texts = df["review"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        text_list = texts.tolist()
+        for doc in tqdm(
+            self.nlp.pipe(
+                text_list,
+                batch_size=self.batch_size,
+                n_process=8,
+            ),
+            total=len(text_list),
+        ):
+            processed_texts.append(self._process_doc(doc))
+
+        df["preprocess_text"] = processed_texts
         df = df[df["preprocess_text"].str.split().str.len() > 0]
         return df

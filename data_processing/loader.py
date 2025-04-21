@@ -45,3 +45,59 @@ def load_csv_data(file_name: str) -> pd.DataFrame:
     except Exception as e:
         print(f"Error loading data: {e}")
         return pd.DataFrame()
+
+
+def load_big_data_csv() -> pd.DataFrame:
+    """
+    Load big data CSV files.
+    """
+    big_data = pd.DataFrame(columns=["text", "sentiment"])
+    try:
+        for key, file_paths in config.DATA_LOCATIONS.items():
+            if key == "Testing":
+                continue
+            elif key == "Normal":
+                # Handle Normal dataset specially
+                big_data = pd.concat(
+                    [
+                        big_data,
+                        _load_and_concat_csv(
+                            file_paths,
+                            encoding="ISO-8859-1",
+                            columns=["text", "sentiment"],
+                        ),
+                    ],
+                    ignore_index=True,
+                )
+
+            elif key == "Twitter":
+                twitter_df = _load_and_concat_csv(
+                    file_paths, columns=["review", "sentiment"]
+                ).rename(columns={"review": "text", "sentiment": "sentiment"})
+                twitter_df = twitter_df[twitter_df["sentiment"] != "Irrelevant"]
+                big_data = pd.concat(
+                    [
+                        big_data,
+                        twitter_df,
+                    ],
+                    ignore_index=True,
+                )
+
+            else:
+                # Generic loading for other datasets
+                big_data = pd.concat(
+                    [
+                        big_data,
+                        _load_and_concat_csv(
+                            file_paths,
+                            columns=["review", "sentiment"],
+                        ).rename(columns={"review": "text", "sentiment": "sentiment"}),
+                    ],
+                    ignore_index=True,
+                )
+
+        return big_data
+
+    except Exception as e:
+        print(f"Error loading big data: {e}")
+        return pd.DataFrame()

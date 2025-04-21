@@ -36,11 +36,13 @@ class RandomForestModel:
         predicted_labels_filtered = self.model_class[
             np.argmax(filtered_probabilities, axis=1)
         ]
+        coverage_percentage = 100 * np.sum(confidence_mask) / len(y_pred)
 
         return {
             "y_true": labels_encoder.inverse_transform(true_labels_filtered),
             "y_pred": labels_encoder.inverse_transform(predicted_labels_filtered),
             "threshold": threshold,
+            "coverage_percentage": coverage_percentage,
         }
 
     def save_low_confidence_to_csv(
@@ -60,6 +62,7 @@ class RandomForestModel:
         )
 
         try:
+            os.makedirs(csv_path, exist_ok=True)
             low_confidence_data.to_csv(csv_path, index=False)
             logging.info(f"{dataset_name}: Low confidence samples saved to {csv_path}")
         except Exception as e:
