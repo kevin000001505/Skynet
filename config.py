@@ -9,7 +9,7 @@ from data_processing.cleaning import (
     TestingDataCleaner,  # Testing data cleaner
 )  # Import specific cleaners
 
-DATA_DIR = "data/"
+DATA_DIR = "data/raw/output/"
 OUTPUT_DIR = "output/"
 MODEL_DIR = "models/"
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
