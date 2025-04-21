@@ -1,3 +1,5 @@
+import os
+
 from data_processing.cleaning import (
     MovieDataCleaner,
     NormalTextCleaner,
@@ -10,8 +12,9 @@ from data_processing.cleaning import (
 DATA_DIR = "data/"
 OUTPUT_DIR = "output/"
 MODEL_DIR = "models/"
-PROJECT_ROOT = "."
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
+DEBUG = False
 
 CLEANING_STRATEGIES = {
     "Testing": TestingDataCleaner,  # Testing data cleaner
@@ -53,3 +56,8 @@ RANDOM_FOREST_PARAMS = {
     "n_jobs": -1,
 }
 PROBABILITY_THRESHOLD = 0.6
+<<<<<<< HEAD
+=======
+
+REGEX_URL = r"https?://[\w.]+"  # Slightly more robust url regex
+>>>>>>> main

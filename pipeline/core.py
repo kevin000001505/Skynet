@@ -1,7 +1,7 @@
 from data_processing.loader import load_csv_data, load_big_data_csv
 from utils.helpers import split_data
 from modeling.random_forest import RandomForestModel
-import logging
+import logging, config as conf
 import os
 
 
