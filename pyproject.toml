@@ -25,6 +25,8 @@ datasets = "^3.5.0"
 peft = "^0.15.2"
 hf-xet = "^1.0.3"
 accelerate = ">=0.26.0"
+tensorflow = "^2.19.0"
+tf-keras = "^2.19.0"
 
 
 [build-system]

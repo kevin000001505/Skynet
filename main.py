@@ -47,8 +47,7 @@ def main(big_data: bool = False):
         if result_dict is None:
             logger.error("Skipping dataset due to result error.")
         if config.DEBUG:
-            breakpoint()
-        plot_confusion_matrix(result_dict, dataset_name)  # Error here
+            plot_confusion_matrix(result_dict, dataset_name)
 
     else:
         logger.info("Running in normal mode.")
