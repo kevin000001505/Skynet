@@ -1,7 +1,7 @@
 from data_processing.loader import load_csv_data, load_big_data_csv
 from utils.helpers import split_data
 from modeling.random_forest import RandomForestModel
-import logging
+import logging, config as conf
 import os
 
 
@@ -85,7 +85,8 @@ def big_data_pipeline(dataset_name: str, config):
     cleaned_df = cleaner.big_data_clean(big_data.copy())
     logger.info(f"Big Data Shape: {cleaned_df.shape}")
     target_column = config.TARGET_COLUMNS.get("default")
-    breakpoint()
+    if conf.DEBUG:
+        breakpoint()
     x_train, x_test, y_train, y_test, le = split_data(cleaned_df, target_column)
 
     # 4. Train Model

@@ -44,7 +44,8 @@ def main(big_data: bool = False):
         result_dict = big_data_pipeline(dataset_name, config)
         if result_dict is None:
             logger.error("Skipping dataset due to result error.")
-        breakpoint()
+        if config.DEBUG:
+            breakpoint()
         plot_confusion_matrix(result_dict, dataset_name)  # Error here
 
     else:

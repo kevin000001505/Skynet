@@ -1,6 +1,6 @@
 import pandas as pd
 from tqdm.auto import tqdm
-import logging
+import logging, config
 
 # from spacytextblob.spacytextblob import SpacyTextBlob
 import spacy
@@ -43,7 +43,7 @@ class BaseDataCleaner:
         processed_texts = []
         df = self.clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        texts = df["text"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        texts = df["text"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
         text_list = texts.tolist()
         for doc in tqdm(
             self.nlp.pipe(
@@ -66,7 +66,7 @@ class MovieDataCleaner(BaseDataCleaner):
         processed_texts = []
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        texts = df["review"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        texts = df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
         text_list = texts.tolist()
         for doc in tqdm(
             self.nlp.pipe(
@@ -89,7 +89,7 @@ class NormalTextCleaner(BaseDataCleaner):
         processed_texts = []
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        texts = df["text"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        texts = df["text"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
         text_list = texts.tolist()
         for doc in tqdm(
             self.nlp.pipe(
@@ -112,7 +112,7 @@ class TwitterDataCleaner(BaseDataCleaner):
         processed_texts = []
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        texts = df["review"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        texts = df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
         text_list = texts.tolist()
         for doc in tqdm(
             self.nlp.pipe(
@@ -136,7 +136,7 @@ class YelpDataCleaner(BaseDataCleaner):
         df = super().clean(df)
         df["sentiment"] = df["sentiment"].map({2: "positive", 1: "negative"})
         print(CLEANING_TEXT_MESSAGE)
-        texts = df["review"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        texts = df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
         text_list = texts.tolist()
         for doc in tqdm(
             self.nlp.pipe(
@@ -159,7 +159,7 @@ class TestingDataCleaner(BaseDataCleaner):
         processed_texts = []
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        texts = df["review"].astype(str).apply(lambda x: re.sub(r"https?://.+", "", x))
+        texts = df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
         text_list = texts.tolist()
         for doc in tqdm(
             self.nlp.pipe(

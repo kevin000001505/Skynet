@@ -95,7 +95,8 @@ def load_big_data_csv() -> pd.DataFrame:
                     ],
                     ignore_index=True,
                 )
-
+        if len(big_data) == 0:
+            raise ValueError("Could not load any data. Resulting dataframe is empty. Please check if the csv files are in the right location.")
         return big_data
 
     except Exception as e:
