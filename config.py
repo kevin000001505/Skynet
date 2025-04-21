@@ -25,12 +25,12 @@ CLEANING_STRATEGIES = {
 
 DATA_LOCATIONS = {
     # "Testing": [DATA_DIR + "testing.csv"],
-    # "Twitter": [DATA_DIR + "Twitter Training Data.csv"],
-    # "Movie": [DATA_DIR + "IMDB Dataset.csv"],
-    # "Normal": [
-    #     DATA_DIR + "train.csv",
-    #     DATA_DIR + "test.csv",
-    # ],
+    "Twitter": [DATA_DIR + "Twitter Training Data.csv"],
+    "Movie": [DATA_DIR + "IMDB Dataset.csv"],
+    "Normal": [
+        DATA_DIR + "train.csv",
+        DATA_DIR + "test.csv",
+    ],
     "Yelp": [
         DATA_DIR + "yelp_review_polarity_csv/train.csv",
         DATA_DIR + "yelp_review_polarity_csv/test.csv",

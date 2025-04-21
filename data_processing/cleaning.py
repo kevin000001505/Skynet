@@ -16,7 +16,7 @@ CLEANING_TEXT_MESSAGE = "Cleaning text data..."
 
 class BaseDataCleaner:
 
-    def __init__(self, batch_size=500):
+    def __init__(self, batch_size=300):
         self.nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
         self.batch_size = batch_size
         # self.nlp.add_pipe("spacytextblob") Further implementation needed
@@ -29,11 +29,9 @@ class BaseDataCleaner:
 
     def _process_doc(self, doc):
         clean_tokens = [
-            token.lemma_.lower()
+            f"{token.lemma_.lower()} {token.tag_}"
             for token in doc
-            if token.text not in string.punctuation
-            and not token.is_stop
-            and token.lemma_ != "-PRON-"
+            if token.text not in string.punctuation and not token.is_stop
         ]
         if len(clean_tokens) > 0:
             return " ".join(clean_tokens)
@@ -48,7 +46,7 @@ class BaseDataCleaner:
         for doc in tqdm(
             self.nlp.pipe(
                 text_list,
-                batch_size=300,
+                batch_size=self.batch_size,
                 n_process=8,
             ),
             total=len(text_list),

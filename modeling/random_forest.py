@@ -62,6 +62,7 @@ class RandomForestModel:
         )
 
         try:
+            os.makedirs(csv_path, exist_ok=True)
             low_confidence_data.to_csv(csv_path, index=False)
             logging.info(f"{dataset_name}: Low confidence samples saved to {csv_path}")
         except Exception as e:

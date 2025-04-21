@@ -2,6 +2,7 @@ from pipeline.core import run_pipeline_for_dataset, big_data_pipeline
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import os
 import argparse
 import config
 import logging
@@ -33,6 +34,7 @@ def plot_confusion_matrix(result_dict, dataset_name):
     plot_filename = (
         f"plots/confusion_matrix_{dataset_name}_{result_dict['threshold']}.png"
     )
+    os.makedirs("plots", exist_ok=True)
     plt.savefig(plot_filename)
     plt.close()
 

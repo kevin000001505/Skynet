@@ -20,6 +20,11 @@ spacytextblob = "^5.0.0"
 black = "^25.1.0"
 notebook = "^7.4.0"
 joblib = "^1.4.2"
+transformers = "^4.51.3"
+datasets = "^3.5.0"
+peft = "^0.15.2"
+hf-xet = "^1.0.3"
+accelerate = ">=0.26.0"
 
 
 [build-system]

@@ -85,7 +85,7 @@ def big_data_pipeline(dataset_name: str, config):
     cleaned_df = cleaner.big_data_clean(big_data.copy())
     logger.info(f"Big Data Shape: {cleaned_df.shape}")
     target_column = config.TARGET_COLUMNS.get("default")
-    breakpoint()
+
     x_train, x_test, y_train, y_test, le = split_data(cleaned_df, target_column)
 
     # 4. Train Model
