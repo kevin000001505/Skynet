@@ -107,7 +107,7 @@ def big_data_pipeline(dataset_name: str, config):
         x=cleaned_df["preprocess_text"],
         threshold=config.PROBABILITY_THRESHOLD,
         dataset_name=dataset_name,
-        raw_data=big_data,
+        cleaned_data=cleaned_df,
     )
 
     logger.info("Low confidence samples saved.")
