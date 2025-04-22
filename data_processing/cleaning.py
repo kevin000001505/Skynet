@@ -29,7 +29,7 @@ class BaseDataCleaner:
 
     def _process_doc(self, doc):
         clean_tokens = [
-            f"{token.lemma_.lower()} {token.tag_}"
+            f"{token.lemma_.lower()}"
             for token in doc
             if token.text not in string.punctuation and not token.is_stop
         ]
@@ -64,7 +64,9 @@ class MovieDataCleaner(BaseDataCleaner):
         processed_texts = []
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        texts = df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
+        texts = (
+            df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
+        )
         text_list = texts.tolist()
         for doc in tqdm(
             self.nlp.pipe(
@@ -110,7 +112,9 @@ class TwitterDataCleaner(BaseDataCleaner):
         processed_texts = []
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        texts = df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
+        texts = (
+            df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
+        )
         text_list = texts.tolist()
         for doc in tqdm(
             self.nlp.pipe(
@@ -134,7 +138,9 @@ class YelpDataCleaner(BaseDataCleaner):
         df = super().clean(df)
         df["sentiment"] = df["sentiment"].map({2: "positive", 1: "negative"})
         print(CLEANING_TEXT_MESSAGE)
-        texts = df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
+        texts = (
+            df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
+        )
         text_list = texts.tolist()
         for doc in tqdm(
             self.nlp.pipe(
@@ -157,7 +163,9 @@ class TestingDataCleaner(BaseDataCleaner):
         processed_texts = []
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        texts = df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
+        texts = (
+            df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
+        )
         text_list = texts.tolist()
         for doc in tqdm(
             self.nlp.pipe(

@@ -15,7 +15,10 @@ default_params = config.RANDOM_FOREST_PARAMS
 class RandomForestModel:
     def __init__(self, params=default_params):
         self.pipeline = Pipeline(
-            [("tfidf", TfidfVectorizer()), ("rf", RandomForestClassifier(**params))]
+            [
+                ("tfidf", TfidfVectorizer(max_features=3000)),
+                ("rf", RandomForestClassifier(**params)),
+            ]
         )
 
     def train(self, x_train, y_train):
