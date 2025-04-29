@@ -10,3 +10,6 @@ data/yelp_review_polarity_csv/readme.txt
 *.pkl
 models/Testing.pkl
 results
+LSTM.ipynb
+models/hybrid_model_state.pt
+plots/Whole Model.png

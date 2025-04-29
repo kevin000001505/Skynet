@@ -10,12 +10,16 @@ import joblib
 
 logger = logging.getLogger(__name__)
 default_params = config.RANDOM_FOREST_PARAMS
+max_features = config.MAX_FEATURES
 
 
 class RandomForestModel:
     def __init__(self, params=default_params):
         self.pipeline = Pipeline(
-            [("tfidf", TfidfVectorizer()), ("rf", RandomForestClassifier(**params))]
+            [
+                ("tfidf", TfidfVectorizer(max_features=max_features)),
+                ("rf", RandomForestClassifier(**params)),
+            ]
         )
 
     def train(self, x_train, y_train):
@@ -51,18 +55,20 @@ class RandomForestModel:
         threshold=0.5,
         csv_path="low_confidence_samples/{dataset_name}.csv",
         dataset_name="dataset",
-        raw_data=None,
+        cleaned_data=None,
     ):
         csv_path = csv_path.format(dataset_name=dataset_name)
         y_pred = self.pipeline.predict_proba(x)
         high_confidence_mask = np.max(y_pred, axis=1) > threshold
-        high_confidence_indexs = np.nonzero(high_confidence_mask)[0].tolist()
-        low_confidence_data = raw_data.drop(high_confidence_indexs).reset_index(
+        low_confidence_mask = ~high_confidence_mask
+        low_confidence_data = cleaned_data.loc[low_confidence_mask].reset_index(
             drop=True
         )
 
         try:
-            os.makedirs(csv_path, exist_ok=True)
+            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+            if os.path.isdir(csv_path):
+                os.rmdir(csv_path)
             low_confidence_data.to_csv(csv_path, index=False)
             logging.info(f"{dataset_name}: Low confidence samples saved to {csv_path}")
         except Exception as e:

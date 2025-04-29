@@ -64,7 +64,7 @@ def run_pipeline_for_dataset(dataset_name: str, config):
         x=cleaned_df["preprocess_text"],
         threshold=config.PROBABILITY_THRESHOLD,
         dataset_name=dataset_name,
-        raw_data=raw_df,
+        cleaned_data=cleaned_df,
     )
 
     logger.info("Low confidence samples saved.")
@@ -83,6 +83,7 @@ def big_data_pipeline(dataset_name: str, config):
         raise ValueError("Failed to load big data CSV.")
     cleaner = config.CLEANING_STRATEGIES.get("default")()
     cleaned_df = cleaner.big_data_clean(big_data.copy())
+    print("Unique Labels: ", cleaned_df["sentiment"].unique())
     logger.info(f"Big Data Shape: {cleaned_df.shape}")
     target_column = config.TARGET_COLUMNS.get("default")
 
@@ -107,7 +108,7 @@ def big_data_pipeline(dataset_name: str, config):
         x=cleaned_df["preprocess_text"],
         threshold=config.PROBABILITY_THRESHOLD,
         dataset_name=dataset_name,
-        raw_data=big_data,
+        cleaned_data=cleaned_df,
     )
 
     logger.info("Low confidence samples saved.")
