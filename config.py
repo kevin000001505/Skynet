@@ -9,11 +9,12 @@ from data_processing.cleaning import (
     TestingDataCleaner,  # Testing data cleaner
 )  # Import specific cleaners
 
-DATA_DIR = "data/raw/output/"
+DATA_DIR = "data/"
 OUTPUT_DIR = "output/"
 MODEL_DIR = "models/"
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
+BIG_DATA_FILE = "data/SA.csv"
 DEBUG = False
 
 CLEANING_STRATEGIES = {
