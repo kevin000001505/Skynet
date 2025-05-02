@@ -43,7 +43,7 @@ def main(big_data: bool = False):
     if big_data:
         dataset_name = "big_data"
         logger.info("Running in big data mode.")
-        result_dict = big_data_pipeline(dataset_name, config)
+        result_dict = big_data_pipeline(dataset_name)
         if result_dict is None:
             logger.error("Skipping dataset due to result error.")
         if config.DEBUG:
@@ -56,7 +56,7 @@ def main(big_data: bool = False):
         for dataset_name in tqdm(
             config.DATA_LOCATIONS.keys(), desc="Processing Datasets"
         ):
-            result_dict = run_pipeline_for_dataset(dataset_name, config)
+            result_dict = run_pipeline_for_dataset(dataset_name)
             if result_dict is None:
                 logger.error(f"Skipping dataset due to result error: {dataset_name}")
                 continue

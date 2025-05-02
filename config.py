@@ -15,6 +15,7 @@ MODEL_DIR = "models/"
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 BIG_DATA_FILE = "data/SA.csv"
+BIG_DATA_FILE_CLEANED = "data/SA_cleaned.csv"
 DEBUG = False
 
 CLEANING_STRATEGIES = {
@@ -42,12 +43,12 @@ DATA_LOCATIONS = {
 }
 
 TARGET_COLUMNS = {
-    "Testing": "sentiment",
-    "Twitter": "sentiment",
-    "Movie": "sentiment",
-    "Normal": "sentiment",
-    "Yelp": "sentiment",
-    "default": "sentiment",
+    "Testing": "label",
+    "Twitter": "label",
+    "Movie": "label",
+    "Normal": "label",
+    "Yelp": "label",
+    "default": "label",
 }
 
 RANDOM_FOREST_PARAMS = {

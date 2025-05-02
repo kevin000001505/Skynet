@@ -55,6 +55,8 @@ class BaseDataCleaner:
 
         df["preprocess_text"] = processed_texts
         df = df[df["preprocess_text"].str.split().str.len() > 0]
+        df.to_csv(config.BIG_DATA_FILE_CLEANED)
+        print("Cleaner: Cleaned big data file writen to data/SA_cleaned.csv.")
         return df
 
 

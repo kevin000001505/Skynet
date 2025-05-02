@@ -1,7 +1,7 @@
 import pandas as pd
 import logging
 from typing import List
-import config
+import config, os
 
 
 def _load_and_concat_csv(
@@ -56,55 +56,14 @@ def load_big_data_csv() -> pd.DataFrame:
     """
     Load big data CSV files.
     """
-    big_data = pd.DataFrame(columns=["text", "sentiment"])
+    # Check if cleaned big data file exists first before performing cleaning
+    if os.path.exists(config.BIG_DATA_FILE_CLEANED):
+        print("Cleaned big data file exists. Skipping cleaning.")
+        return pd.read_csv(config.BIG_DATA_FILE_CLEANED)
+
     try:
-        for key, file_paths in config.DATA_LOCATIONS.items():
-            if key == "Testing":
-                continue
-            elif key == "Normal":
-                # Handle Normal dataset specially
-                big_data = pd.concat(
-                    [
-                        big_data,
-                        _load_and_concat_csv(
-                            file_paths,
-                            encoding="ISO-8859-1",
-                            columns=["text", "sentiment"],
-                        ),
-                    ],
-                    ignore_index=True,
-                )
-
-            elif key == "Twitter":
-                twitter_df = _load_and_concat_csv(
-                    file_paths, columns=["review", "sentiment"]
-                ).rename(columns={"review": "text", "sentiment": "sentiment"})
-                twitter_df = twitter_df[twitter_df["sentiment"] != "Irrelevant"]
-                big_data = pd.concat(
-                    [
-                        big_data,
-                        twitter_df,
-                    ],
-                    ignore_index=True,
-                )
-
-            else:
-                # Generic loading for other datasets
-                big_data = pd.concat(
-                    [
-                        big_data,
-                        _load_and_concat_csv(
-                            file_paths,
-                            columns=["review", "sentiment"],
-                        ).rename(columns={"review": "text", "sentiment": "sentiment"}),
-                    ],
-                    ignore_index=True,
-                )
-                big_data["sentiment"] = (
-                    big_data["sentiment"]
-                    .replace({"2": "positive", "1": "negative"})
-                    .str.lower()
-                )
+        big_data = pd.read_csv(config.BIG_DATA_FILE)
+        print("Big data file loaded.")
         if len(big_data) == 0:
             raise ValueError(
                 "Could not load any data. Resulting dataframe is empty. Please check if the csv files are in the right location."
@@ -113,4 +72,3 @@ def load_big_data_csv() -> pd.DataFrame:
 
     except Exception as e:
         print(f"Error loading big data: {e}")
-        return pd.DataFrame()
