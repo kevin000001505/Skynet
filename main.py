@@ -39,11 +39,11 @@ def plot_confusion_matrix(result_dict, dataset_name):
     plt.close()
 
 
-def main(big_data: bool = False):
+def main(big_data: bool = False, recreate: bool = False):
     if big_data:
         dataset_name = "big_data"
         logger.info("Running in big data mode.")
-        result_dict = big_data_pipeline(dataset_name)
+        result_dict = big_data_pipeline(dataset_name, recreate)
         if result_dict is None:
             logger.error("Skipping dataset due to result error.")
         else:
@@ -66,5 +66,6 @@ def main(big_data: bool = False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run pipeline on datasets.")
     parser.add_argument("--bigdata", action="store_true", help="Run on big data mode")
+    parser.add_argument("--overwrite", action="store_true", help="Recreate low confidence data")
     args = parser.parse_args()
     main(big_data=args.bigdata)

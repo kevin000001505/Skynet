@@ -76,12 +76,12 @@ def run_pipeline_for_dataset(dataset_name: str):
     return filtered_output
 
 
-def big_data_pipeline(dataset_name: str):
+def big_data_pipeline(dataset_name: str, recreate: bool = False):
     """Runs the pipeline for big data."""
     big_data = load_big_data_csv()
 
     # If data is already cleaned skip cleaning data
-    if os.path.exists(config.BIG_DATA_FILE_CLEANED):
+    if os.path.exists(config.BIG_DATA_FILE_CLEANED) and not recreate:
         cleaned_df = big_data
     else:
         cleaner = config.CLEANING_STRATEGIES.get("default")()

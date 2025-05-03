@@ -60,3 +60,9 @@ PROBABILITY_THRESHOLD = 0.6
 MAX_FEATURES = 2000
 
 REGEX_URL = r"https?://[\w.]+"  # Slightly more robust url regex
+REGEX_HTML_TAGS = {
+    "Yelp": [r"<[^>]*>", r"br />"],
+}
+REGEX_UTF8 = {
+    "Yelp": r"caf\\u00e\d",
+}
