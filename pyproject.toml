@@ -25,7 +25,15 @@ datasets = "^3.5.0"
 peft = "^0.15.2"
 hf-xet = "^1.0.3"
 accelerate = ">=0.26.0"
+<<<<<<< HEAD
+tensorflow = "^2.19.0"
+tf-keras = "^2.19.0"
+
+=======
 chardet = "^5.2.0"
+streamlit = "^1.45.0"
+protobuf = "3.20.3"
+>>>>>>> main
 
 [build-system]
 requires = ["poetry-core"]

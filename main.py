@@ -13,9 +13,21 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+<<<<<<< HEAD
+def main():
+    # List of datasets to process
+    datasets = [
+        # "Testing",
+        "Normal",
+        "Twitter",
+        "Movie",
+        "Yelp",
+    ]
+=======
 def plot_confusion_matrix(result_dict, dataset_name):
     conf_mat = confusion_matrix(result_dict["y_true"], result_dict["y_pred"])
     labels = sorted(list(set(result_dict["y_true"]) | set(result_dict["y_pred"])))
+>>>>>>> main
 
     plt.figure(figsize=(6, 4))
     sns.heatmap(
@@ -47,8 +59,7 @@ def main(big_data: bool = False):
         if result_dict is None:
             logger.error("Skipping dataset due to result error.")
         if config.DEBUG:
-            breakpoint()
-        plot_confusion_matrix(result_dict, dataset_name)  # Error here
+            plot_confusion_matrix(result_dict, dataset_name)
 
     else:
         logger.info("Running in normal mode.")

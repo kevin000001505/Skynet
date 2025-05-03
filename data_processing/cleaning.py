@@ -17,7 +17,9 @@ CLEANING_TEXT_MESSAGE = "Cleaning text data..."
 class BaseDataCleaner:
 
     def __init__(self, batch_size=300):
-        self.nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
+        self.nlp = spacy.load(
+            "en_core_web_sm", disable=["ner", "parser", "senter", "textcat"]
+        )
         self.batch_size = batch_size
         # self.nlp.add_pipe("spacytextblob") Further implementation needed
 
@@ -108,6 +110,7 @@ class NormalTextCleaner(BaseDataCleaner):
         return df
 
 
+<<<<<<< HEAD
 class TwitterDataCleaner(BaseDataCleaner):
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -133,6 +136,8 @@ class TwitterDataCleaner(BaseDataCleaner):
         return df
 
 
+=======
+>>>>>>> main
 class YelpDataCleaner(BaseDataCleaner):
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:

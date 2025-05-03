@@ -114,4 +114,8 @@ with open("./logs/training" + model_name + ".csv", "w") as f:
 
     writer = csv.writer(f)
     for i in range(len(train_epochs)):
+<<<<<<< HEAD
+        writer.writerow([train_epochs[i], train_losses[i]])
+=======
         writer.writerow(train_epochs[i], train_losses[i])
+>>>>>>> main

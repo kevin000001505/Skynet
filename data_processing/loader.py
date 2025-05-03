@@ -30,11 +30,6 @@ def load_csv_data(file_name: str) -> pd.DataFrame:
         if not file_path:
             raise ValueError(f"No file paths configured for {file_name}")
         if len(file_path) == 1:
-            if file_name == "Twitter":
-                # Twitter dataset has a different column name
-                twitter_df = pd.read_csv(file_path[0])
-                twitter_df = twitter_df[twitter_df["sentiment"] != "Irrelevant"]
-                return twitter_df
             # Single file: load directly
             return pd.read_csv(file_path[0])
         if len(file_path) == 2:

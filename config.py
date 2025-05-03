@@ -3,13 +3,12 @@ import os
 from data_processing.cleaning import (
     MovieDataCleaner,
     NormalTextCleaner,
-    TwitterDataCleaner,
     YelpDataCleaner,
     BaseDataCleaner,
     TestingDataCleaner,  # Testing data cleaner
 )  # Import specific cleaners
 
-DATA_DIR = "data/"
+DATA_DIR = "data/raw_datasets"
 OUTPUT_DIR = "output/"
 MODEL_DIR = "models/"
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -20,7 +19,6 @@ DEBUG = False
 
 CLEANING_STRATEGIES = {
     "Testing": TestingDataCleaner,  # Testing data cleaner
-    "Twitter": TwitterDataCleaner,
     "Movie": MovieDataCleaner,
     "Normal": NormalTextCleaner,
     "Yelp": YelpDataCleaner,
@@ -30,21 +28,19 @@ CLEANING_STRATEGIES = {
 
 DATA_LOCATIONS = {
     # "Testing": [DATA_DIR + "testing.csv"],
-    "Twitter": [DATA_DIR + "Twitter Training Data.csv"],
     "Movie": [DATA_DIR + "IMDB Dataset.csv"],
     "Normal": [
         DATA_DIR + "train.csv",
         DATA_DIR + "test.csv",
     ],
     "Yelp": [
-        DATA_DIR + "yelp_review_polarity_csv/train.csv",
-        DATA_DIR + "yelp_review_polarity_csv/test.csv",
+        DATA_DIR + "yelp_train.csv",
+        DATA_DIR + "yelp_test.csv",
     ],
 }
 
 TARGET_COLUMNS = {
     "Testing": "label",
-    "Twitter": "label",
     "Movie": "label",
     "Normal": "label",
     "Yelp": "label",
@@ -57,7 +53,16 @@ RANDOM_FOREST_PARAMS = {
     "random_state": 42,
     "n_jobs": -1,
 }
+<<<<<<< HEAD
+PROBABILITY_THRESHOLD = 0.6
+<<<<<<< HEAD
+=======
+
+REGEX_URL = r"https?://[\w.]+"  # Slightly more robust url regex
+>>>>>>> main
+=======
 MAX_FEATURES = 2000
 PROBABILITY_THRESHOLD = 0.7
 
 REGEX_URL = r"https?://[\w.]+"  # Slightly more robust url regex
+>>>>>>> main

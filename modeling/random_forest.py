@@ -17,7 +17,11 @@ class RandomForestModel:
     def __init__(self, params=default_params):
         self.pipeline = Pipeline(
             [
+<<<<<<< HEAD
+                ("tfidf", TfidfVectorizer(max_features=3000)),
+=======
                 ("tfidf", TfidfVectorizer(max_features=max_features)),
+>>>>>>> main
                 ("rf", RandomForestClassifier(**params)),
             ]
         )
@@ -85,3 +89,24 @@ class RandomForestModel:
         model_path = os.path.join(output_dir, model_filename)
         joblib.dump(self.pipeline, model_path)
         logger.info(f"Random Forest pipeline saved to {model_path}")
+
+    def save_tfidf_vectors(self, output_dir, dataset_name):
+        """
+        Save TF-IDF vectorizer to disk after training
+
+        Args:
+            output_dir: Directory to save the vectorizer
+            dataset_name: Name prefix for saved files
+        """
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Get the TF-IDF vectorizer from pipeline
+        tfidf = self.pipeline.named_steps["tfidf"]
+
+        # Save the vectorizer
+        vectorizer_path = os.path.join(
+            output_dir, f"{dataset_name}_tfidf_vectorizer.pkl"
+        )
+        joblib.dump(tfidf, vectorizer_path)
+
+        logger.info(f"TF-IDF vectorizer saved to {vectorizer_path}")
