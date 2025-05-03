@@ -3,7 +3,6 @@ import os
 from data_processing.cleaning import (
     MovieDataCleaner,
     NormalTextCleaner,
-    TwitterDataCleaner,
     YelpDataCleaner,
     BaseDataCleaner,
     TestingDataCleaner,  # Testing data cleaner
@@ -20,7 +19,6 @@ DEBUG = False
 
 CLEANING_STRATEGIES = {
     "Testing": TestingDataCleaner,  # Testing data cleaner
-    "Twitter": TwitterDataCleaner,
     "Movie": MovieDataCleaner,
     "Normal": NormalTextCleaner,
     "Yelp": YelpDataCleaner,
