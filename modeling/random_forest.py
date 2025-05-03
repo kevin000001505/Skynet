@@ -10,13 +10,18 @@ import joblib
 
 logger = logging.getLogger(__name__)
 default_params = config.RANDOM_FOREST_PARAMS
+max_features = config.MAX_FEATURES
 
 
 class RandomForestModel:
     def __init__(self, params=default_params):
         self.pipeline = Pipeline(
             [
+<<<<<<< HEAD
                 ("tfidf", TfidfVectorizer(max_features=3000)),
+=======
+                ("tfidf", TfidfVectorizer(max_features=max_features)),
+>>>>>>> main
                 ("rf", RandomForestClassifier(**params)),
             ]
         )
@@ -54,18 +59,20 @@ class RandomForestModel:
         threshold=0.5,
         csv_path="low_confidence_samples/{dataset_name}.csv",
         dataset_name="dataset",
-        raw_data=None,
+        cleaned_data=None,
     ):
         csv_path = csv_path.format(dataset_name=dataset_name)
         y_pred = self.pipeline.predict_proba(x)
         high_confidence_mask = np.max(y_pred, axis=1) > threshold
-        high_confidence_indexs = np.nonzero(high_confidence_mask)[0].tolist()
-        low_confidence_data = raw_data.drop(high_confidence_indexs).reset_index(
+        low_confidence_mask = ~high_confidence_mask
+        low_confidence_data = cleaned_data.loc[low_confidence_mask].reset_index(
             drop=True
         )
 
         try:
-            os.makedirs(csv_path, exist_ok=True)
+            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+            if os.path.isdir(csv_path):
+                os.rmdir(csv_path)
             low_confidence_data.to_csv(csv_path, index=False)
             logging.info(f"{dataset_name}: Low confidence samples saved to {csv_path}")
         except Exception as e:
@@ -82,3 +89,24 @@ class RandomForestModel:
         model_path = os.path.join(output_dir, model_filename)
         joblib.dump(self.pipeline, model_path)
         logger.info(f"Random Forest pipeline saved to {model_path}")
+
+    def save_tfidf_vectors(self, output_dir, dataset_name):
+        """
+        Save TF-IDF vectorizer to disk after training
+
+        Args:
+            output_dir: Directory to save the vectorizer
+            dataset_name: Name prefix for saved files
+        """
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Get the TF-IDF vectorizer from pipeline
+        tfidf = self.pipeline.named_steps["tfidf"]
+
+        # Save the vectorizer
+        vectorizer_path = os.path.join(
+            output_dir, f"{dataset_name}_tfidf_vectorizer.pkl"
+        )
+        joblib.dump(tfidf, vectorizer_path)
+
+        logger.info(f"TF-IDF vectorizer saved to {vectorizer_path}")

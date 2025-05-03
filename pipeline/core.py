@@ -1,14 +1,14 @@
 from data_processing.loader import load_csv_data, load_big_data_csv
 from utils.helpers import split_data
 from modeling.random_forest import RandomForestModel
-import logging, config as conf
+import logging, config
 import os
 
 
 logger = logging.getLogger(__name__)
 
 
-def run_pipeline_for_dataset(dataset_name: str, config):
+def run_pipeline_for_dataset(dataset_name: str):
     """Runs the full pipeline for a single dataset."""
 
     logger.info(f"Starting pipeline for dataset: {dataset_name}")
@@ -64,7 +64,7 @@ def run_pipeline_for_dataset(dataset_name: str, config):
         x=cleaned_df["preprocess_text"],
         threshold=config.PROBABILITY_THRESHOLD,
         dataset_name=dataset_name,
-        raw_data=raw_df,
+        cleaned_data=cleaned_df,
     )
 
     logger.info("Low confidence samples saved.")
@@ -76,13 +76,18 @@ def run_pipeline_for_dataset(dataset_name: str, config):
     return filtered_output
 
 
-def big_data_pipeline(dataset_name: str, config):
+def big_data_pipeline(dataset_name: str):
     """Runs the pipeline for big data."""
     big_data = load_big_data_csv()
-    if big_data is None:
-        raise ValueError("Failed to load big data CSV.")
-    cleaner = config.CLEANING_STRATEGIES.get("default")()
-    cleaned_df = cleaner.big_data_clean(big_data.copy())
+
+    # If data is already cleaned skip cleaning data
+    if os.path.exists(config.BIG_DATA_FILE_CLEANED):
+        cleaned_df = big_data
+    else:
+        cleaner = config.CLEANING_STRATEGIES.get("default")()
+        cleaned_df = cleaner.big_data_clean(big_data.copy())
+
+    print("Unique Labels: ", cleaned_df["label"].unique())
     logger.info(f"Big Data Shape: {cleaned_df.shape}")
     target_column = config.TARGET_COLUMNS.get("default")
 
@@ -107,7 +112,7 @@ def big_data_pipeline(dataset_name: str, config):
         x=cleaned_df["preprocess_text"],
         threshold=config.PROBABILITY_THRESHOLD,
         dataset_name=dataset_name,
-        raw_data=big_data,
+        cleaned_data=cleaned_df,
     )
 
     logger.info("Low confidence samples saved.")
@@ -115,5 +120,6 @@ def big_data_pipeline(dataset_name: str, config):
     # 6. Save Model
     models_dir = os.path.join(config.PROJECT_ROOT, "models")
     model.save_model(models_dir, dataset_name)
+    model.save_tfidf_vectors(output_dir=models_dir, dataset_name=dataset_name)
 
     return filtered_output
