@@ -108,31 +108,6 @@ class NormalTextCleaner(BaseDataCleaner):
         return df
 
 
-class TwitterDataCleaner(BaseDataCleaner):
-
-    def clean(self, df: pd.DataFrame) -> pd.DataFrame:
-        processed_texts = []
-        df = super().clean(df)
-        print(CLEANING_TEXT_MESSAGE)
-        texts = (
-            df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
-        )
-        text_list = texts.tolist()
-        for doc in tqdm(
-            self.nlp.pipe(
-                text_list,
-                batch_size=self.batch_size,
-                n_process=8,
-            ),
-            total=len(text_list),
-        ):
-            processed_texts.append(self._process_doc(doc))
-
-        df["preprocess_text"] = processed_texts
-        df = df[df["preprocess_text"].str.split().str.len() > 0]
-        return df
-
-
 class YelpDataCleaner(BaseDataCleaner):
 
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
