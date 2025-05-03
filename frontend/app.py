@@ -1,9 +1,9 @@
 import streamlit as st
-import pandas as pd
+import numpy as np
 import pickle
 import spacy
 import joblib
-
+import config
 
 vectorizer = joblib.load("../models/tfidf/big_data_tfidf_vectorizer.pkl")
 
@@ -11,7 +11,7 @@ nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 from data_processing.cleaning import BaseDataCleaner
 
 cleaner = BaseDataCleaner()
-label_transofrm = {"2": "Positive", "0": "Negative"}
+label_transofrm = {"1": "Positive", "0": "Negative"}
 
 
 @st.cache_resource
@@ -41,10 +41,18 @@ def main():
             height=200,
             placeholder="Type or paste your text here...",
         )
-        clean_text = clean_text(text_input)
-        vectorizer_input = vectorizer.transform([clean_text])
-        prediction = ml_model.predict(vectorizer_input)
-        st.write("Prediction:", label_transofrm[str(prediction[0])])
+        clean_text_result = clean_text(text_input)
+        vectorizer_input = vectorizer.transform([clean_text_result])
+        prediction_prob = ml_model.predict_proba(vectorizer_input)
+        high_confidence = np.max(prediction_prob, axis=1) > config.PROBABILITY_THRESHOLD
+
+        if np.any(high_confidence):
+            class_idx = np.argmax(prediction_prob[0])
+            prediction_label = str(class_idx)
+            st.write("Prediction:", label_transofrm[prediction_label])
+            st.write("Confidence:", f"{np.max(prediction_prob) * 100:.2f}%")
+        else:
+            st.write("Prediction: Low confidence, unable to classify reliably")
 
     with col2:
         st.subheader("File Upload")

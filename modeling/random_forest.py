@@ -5,7 +5,6 @@ import config
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
-import pandas as pd
 import joblib
 
 logger = logging.getLogger(__name__)
@@ -33,7 +32,7 @@ class RandomForestModel:
         return self.pipeline.predict_proba(x_test)
 
     def filter_by_threshold(self, y_pred, y_true, threshold=0.5, labels_encoder=None):
-        confidence_mask = np.any(y_pred > threshold, axis=1)
+        confidence_mask = np.max(y_pred, axis=1) > threshold
         true_labels_filtered = y_true[confidence_mask]
 
         filtered_probabilities = y_pred[confidence_mask]

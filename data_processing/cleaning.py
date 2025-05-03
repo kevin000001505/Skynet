@@ -115,7 +115,7 @@ class YelpDataCleaner(BaseDataCleaner):
     def clean(self, df: pd.DataFrame) -> pd.DataFrame:
         processed_texts = []
         df = super().clean(df)
-        df["sentiment"] = df["sentiment"].map({2: "positive", 1: "negative"})
+        df["sentiment"] = df["sentiment"].map({1: "positive", 0: "negative"})
         print(CLEANING_TEXT_MESSAGE)
         texts = (
             df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
