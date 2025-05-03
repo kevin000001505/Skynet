@@ -17,11 +17,7 @@ class RandomForestModel:
     def __init__(self, params=default_params):
         self.pipeline = Pipeline(
             [
-<<<<<<< HEAD
-                ("tfidf", TfidfVectorizer(max_features=3000)),
-=======
                 ("tfidf", TfidfVectorizer(max_features=max_features)),
->>>>>>> main
                 ("rf", RandomForestClassifier(**params)),
             ]
         )

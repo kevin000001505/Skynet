@@ -13,21 +13,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-<<<<<<< HEAD
-def main():
-    # List of datasets to process
-    datasets = [
-        # "Testing",
-        "Normal",
-        "Twitter",
-        "Movie",
-        "Yelp",
-    ]
-=======
 def plot_confusion_matrix(result_dict, dataset_name):
     conf_mat = confusion_matrix(result_dict["y_true"], result_dict["y_pred"])
     labels = sorted(list(set(result_dict["y_true"]) | set(result_dict["y_pred"])))
->>>>>>> main
 
     plt.figure(figsize=(6, 4))
     sns.heatmap(
