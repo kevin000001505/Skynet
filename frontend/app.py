@@ -4,6 +4,7 @@ import pandas as pd
 import spacy
 import joblib
 import os
+import re
 import sys
 
 # Add parent directory to path so imports work correctly
@@ -17,6 +18,10 @@ from data_processing.cleaning import BaseDataCleaner
 
 cleaner = BaseDataCleaner()
 label_transofrm = {"1": "Positive", "0": "Negative"}
+bert_transform = {
+    "LABEL_0": "Negative",
+    "LABEL_1": "Positive",
+}
 
 
 @st.cache_resource
@@ -31,10 +36,11 @@ def load_model():
     except Exception as e:
         st.error(f"Failed to load model: {e}")
         st.error(f"Path attempted: {os.path.abspath(model_path)}")
-        return None
+        return None, None
 
 
 def clean_text(text):
+    text = re.sub(config.REGEX_URL, "", text)
     doc = nlp(text)
     clean_text = cleaner._process_doc(doc)
     return clean_text
@@ -47,22 +53,16 @@ def classify_semantic(text, ml_model, bert_model):
     if np.any(high_confidence):
         class_idx = np.argmax(prediction_prob[0])
         prediction_label = str(class_idx)
-        st.write("Prediction:", label_transofrm[prediction_label])
-        st.write("Confidence:", f"{np.max(prediction_prob[0]) * 100:.2f}%")
+        return {
+            "Prediction": label_transofrm[prediction_label],
+            "Confidence": f"{np.max(prediction_prob[0]) * 100:.2f}%",
+        }
     else:
-        # Use a placeholder instead of direct st.info
-        placeholder = st.empty()
-        placeholder.info(
-            "The model is not confident about the prediction. Using BERT model for better accuracy."
-        )
-
         bert_model_prediction = bert_model.predict(text)
-        st.write("BERT Model Prediction:", bert_model_prediction[0])
-        st.write("Prediction:", bert_model_prediction[0]["label"])
-        st.write("Confidence:", f"{bert_model_prediction[0]['score'] * 100:.2f}%")
-
-        # Clear the info message after showing the results
-        placeholder.empty()
+        return {
+            "Prediction": bert_model_prediction[0]["label"],
+            "Confidence": f"{bert_model_prediction[0]['score'] * 100:.2f}%",
+        }
 
 
 def main():
@@ -71,7 +71,7 @@ def main():
 
     # Load the model
     ml_model, bert_model = load_model()
-    if ml_model is None:
+    if ml_model is None or bert_model is None:
         st.error("Failed to load the model. Please check the logs.")
         return
 
@@ -91,29 +91,30 @@ def main():
         st.subheader("File Upload")
         uploaded_file = st.file_uploader(
             "Choose a file",
-            type=["txt", "csv"],
-            help="Supported formats: TXT, CSV",
+            type=["csv"],
+            help="Supported formats: CSV",
         )
 
     # Classify button
     if st.button("Classify", type="primary") and text_input:
+        placeholder = st.empty()
         clean_text_result = clean_text(text_input)
         try:
-            classify_semantic(clean_text_result, ml_model, bert_model)
+            placeholder.info("Classifying... Please wait while we process your text.")
+            result = classify_semantic(clean_text_result, ml_model, bert_model)
+            st.write("### Prediction Result")
+            st.write(f"**Prediction:** {result['Prediction']}")
+            st.write(f"**Confidence:** {result['Confidence']}")
+            placeholder.success("Classification complete!")
+            placeholder.empty()
         except Exception as e:
             st.error(f"Error during prediction: {e}")
 
     if uploaded_file:
-        st.info(f"Processing file: {uploaded_file.name}")
-        if uploaded_file.type == "text/plain":
-            try:
-                text_data = uploaded_file.read().decode("utf-8")
-                clean_text_result = clean_text(text_data)
-                classify_semantic(clean_text_result, ml_model, bert_model)
-            except Exception as e:
-                st.error(f"Error processing text file: {e}")
+        placeholder = st.empty()
+        placeholder.info(f"Processing file: {uploaded_file.name}")
 
-        elif uploaded_file.type == "text/csv":
+        if uploaded_file.type == "text/csv":
             try:
                 df = pd.read_csv(uploaded_file)
 
@@ -137,15 +138,27 @@ def main():
                         label_transofrm[str(pred)] for pred in predictions
                     ]
                     df["confidence"] = [
-                        f"{np.max(prob) * 100:.2f}%" for prob in pred_proba
+                        round(np.max(prob) * 100, 2) for prob in pred_proba
                     ]
 
-                    # Prepare results display
+                    low_confidence_index = df[
+                        df["confidence"] < config.PROBABILITY_THRESHOLD
+                    ].index.to_list()
+
+                    bert_result = bert_model.predict(
+                        df.loc[low_confidence_index]["cleaned_text"].to_list()
+                    )
+                    for idx, item in zip(low_confidence_index, bert_result):
+                        df.at[idx, "prediction"] = bert_transform[item["label"]]
+                        df.at[idx, "confidence"] = round(item["score"] * 100, 2)
+
                     display_cols = [text_column, "prediction", "confidence"]
 
                     # If label column was selected, include it
                     if label_column != "None":
                         display_cols.insert(1, label_column)
+
+                    placeholder.empty()
 
                     st.write("### Prediction Results")
                     st.dataframe(df[display_cols])

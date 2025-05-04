@@ -70,7 +70,11 @@ def main(big_data: bool = False, recreate: bool = False, skiprf: bool = False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run pipeline on datasets.")
     parser.add_argument("--bigdata", action="store_true", help="Run on big data mode")
-    parser.add_argument("--overwrite", action="store_true", help="Recreate low confidence data")
-    parser.add_argument("--skiprf", action="store_true", help="Skip Random Forest training")
+    parser.add_argument(
+        "--overwrite", action="store_true", help="Recreate low confidence data"
+    )
+    parser.add_argument(
+        "--skiprf", action="store_true", help="Skip Random Forest training"
+    )
     args = parser.parse_args()
     main(big_data=args.bigdata, recreate=args.overwrite, skiprf=args.skiprf)
