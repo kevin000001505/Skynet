@@ -2,7 +2,6 @@ import pandas as pd
 from tqdm.auto import tqdm
 import logging, config
 
-# from spacytextblob.spacytextblob import SpacyTextBlob
 import spacy
 import string
 import re
@@ -142,9 +141,7 @@ class TestingDataCleaner(BaseDataCleaner):
         processed_texts = []
         df = super().clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        texts = (
-            df["review"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
-        )
+        texts = df["text"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
         text_list = texts.tolist()
         for doc in tqdm(
             self.nlp.pipe(
