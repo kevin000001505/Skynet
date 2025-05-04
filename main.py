@@ -1,5 +1,6 @@
 from pipeline.core import run_pipeline_for_dataset, big_data_pipeline
 from sklearn.metrics import confusion_matrix
+from transformer.BERT import BERTrainer
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
@@ -11,6 +12,8 @@ import seaborn as sns
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+trainer = BERTrainer()
 
 
 def plot_confusion_matrix(result_dict, dataset_name):
@@ -48,6 +51,8 @@ def main(big_data: bool = False, recreate: bool = False):
             logger.error("Skipping dataset due to result error.")
         else:
             plot_confusion_matrix(result_dict, dataset_name)
+        trainer.train()
+        trainer.eval()
 
     else:
         logger.info("Running in normal mode.")
@@ -66,6 +71,8 @@ def main(big_data: bool = False, recreate: bool = False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run pipeline on datasets.")
     parser.add_argument("--bigdata", action="store_true", help="Run on big data mode")
-    parser.add_argument("--overwrite", action="store_true", help="Recreate low confidence data")
+    parser.add_argument(
+        "--overwrite", action="store_true", help="Recreate low confidence data"
+    )
     args = parser.parse_args()
     main(big_data=args.bigdata, recreate=args.overwrite)

@@ -9,6 +9,7 @@ import sys
 # Add parent directory to path so imports work correctly
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import config
+from transformer.BERT import BertPrediction
 
 # Load NLP model
 nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
@@ -26,7 +27,7 @@ def load_model():
         )
         model_path = os.path.abspath(model_path)
         ml_model = joblib.load(model_path)
-        return ml_model
+        return ml_model, BertPrediction()
     except Exception as e:
         st.error(f"Failed to load model: {e}")
         st.error(f"Path attempted: {os.path.abspath(model_path)}")
@@ -39,7 +40,7 @@ def clean_text(text):
     return clean_text
 
 
-def classify_semantic(text, ml_model):
+def classify_semantic(text, ml_model, bert_model):
     prediction_prob = ml_model.predict_proba([text])
     high_confidence = np.max(prediction_prob, axis=1) > config.PROBABILITY_THRESHOLD
 
@@ -49,8 +50,19 @@ def classify_semantic(text, ml_model):
         st.write("Prediction:", label_transofrm[prediction_label])
         st.write("Confidence:", f"{np.max(prediction_prob[0]) * 100:.2f}%")
     else:
-        st.write("Confidence:", f"{np.max(prediction_prob[0]) * 100:.2f}%")
-        st.write("Prediction: Low confidence, unable to classify reliably")
+        # Use a placeholder instead of direct st.info
+        placeholder = st.empty()
+        placeholder.info(
+            "The model is not confident about the prediction. Using BERT model for better accuracy."
+        )
+
+        bert_model_prediction = bert_model.predict(text)
+        st.write("BERT Model Prediction:", bert_model_prediction[0])
+        st.write("Prediction:", bert_model_prediction[0]["label"])
+        st.write("Confidence:", f"{bert_model_prediction[0]['score'] * 100:.2f}%")
+
+        # Clear the info message after showing the results
+        placeholder.empty()
 
 
 def main():
@@ -58,7 +70,7 @@ def main():
     st.set_page_config(page_title="Skynet", page_icon="🤖", layout="wide")
 
     # Load the model
-    ml_model = load_model()
+    ml_model, bert_model = load_model()
     if ml_model is None:
         st.error("Failed to load the model. Please check the logs.")
         return
@@ -87,7 +99,7 @@ def main():
     if st.button("Classify", type="primary") and text_input:
         clean_text_result = clean_text(text_input)
         try:
-            classify_semantic(clean_text_result, ml_model)
+            classify_semantic(clean_text_result, ml_model, bert_model)
         except Exception as e:
             st.error(f"Error during prediction: {e}")
 
@@ -97,7 +109,7 @@ def main():
             try:
                 text_data = uploaded_file.read().decode("utf-8")
                 clean_text_result = clean_text(text_data)
-                classify_semantic(clean_text_result, ml_model)
+                classify_semantic(clean_text_result, ml_model, bert_model)
             except Exception as e:
                 st.error(f"Error processing text file: {e}")
 
