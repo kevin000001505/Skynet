@@ -77,6 +77,7 @@ def main():
         return
 
     st.title("🤖Skynet")
+    st.write(f"Random Forest confidence threshold: {config.PROBABILITY_THRESHOLD}")
 
     col1, col2 = st.columns(2)
 
