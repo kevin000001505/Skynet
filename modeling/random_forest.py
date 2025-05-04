@@ -53,10 +53,10 @@ class RandomForestModel:
         x,
         # threshold=0.5,
         cleaned_data=None,
-        csv_path="data/SA_cleaned.csv",
+        csv_path=config.BIG_DATA_FILE_CLEANED,
     ):
         y_pred = self.pipeline.predict_proba(x)
-        cleaned_data["confidnece"] = np.max(y_pred, axis=1).tolist()
+        cleaned_data["confidence"] = np.max(y_pred, axis=1).tolist()
         cleaned_data.to_csv(csv_path, index=False)
         logger.info(f"Low confidence samples saved to {csv_path}")
         # high_confidence_mask = np.max(y_pred, axis=1) > threshold

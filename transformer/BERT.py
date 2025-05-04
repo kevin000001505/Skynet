@@ -19,17 +19,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import config
 
-logging.basicConfig(level=logging.INFO)
-
-
 class BertPrediction:
     def __init__(
         self,
-        model_dir: str = "./BERT/training_results/distillbert/distilbert-base-uncased_v0.1",
+        model_name: str = "distillbert/distilbert-base-uncased",
+        version: str = "0.1"
     ):
         self.tokenizer = AutoTokenizer.from_pretrained(
             "distilbert/distilbert-base-uncased"
         )
+        model_dir = f"./BERT/training_results/{model_name}_v{version}"
         self.model = AutoModelForSequenceClassification.from_pretrained(model_dir)
 
     def predict(self, text: str):
@@ -45,7 +44,6 @@ class BERTrainer:
         use_raw_text: bool = False,
         test_size: float = 0.3,
         model_name: str = "distilbert/distilbert-base-uncased",
-        threshold: float = 0.8,
         num_labels: int = 2,
         version: str = "0.1",
     ):
@@ -59,9 +57,9 @@ class BERTrainer:
         self.sanity_check()
 
         # Initialize variables
-        logging.info(f"Filter training dataset by {threshold} confidence level")
+        logging.info(f"Filter training dataset by {config.PROBABILITY_THRESHOLD} confidence level")
         self.df = self.df[
-            self.df["confidence"] < threshold
+            self.df["confidence"] < config.PROBABILITY_THRESHOLD
         ]  # filter by confidence threshold
         logging.info("Structure of filtered dataset:")
         self.df.info(verbose=True)
@@ -155,7 +153,7 @@ class BERTrainer:
     # Adding short max length to lower training time
     def tokenize_function(self, examples):
         return self.tokenizer(
-            examples["text"], padding="max_length", truncation=True, max_length=512
+            examples["text"], padding="max_length", truncation=True, max_length=256
         )
 
     # compute metrics function
@@ -188,10 +186,11 @@ class BERTrainer:
         self,
         learning_rate: float = 1e-5,
         per_device_train_batch_size: int = 16,
-        per_device_eval_batch_size: int = 16,
+        per_device_eval_batch_size: int = 128,
         gradient_accumulation_steps: int = 1,
-        num_train_epochs: int = 3,
-        logging_steps: int = 1000,
+        num_train_epochs: int = 10,
+        logging_steps: int = 100,
+        save_model_threshold: float = 0.8
     ):
 
         if not os.path.exists("training_results"):
@@ -211,6 +210,9 @@ class BERTrainer:
             adam_beta1=0.9,
             adam_beta2=0.999,
             adam_epsilon=1e-8,
+            bf16=True,
+            #torch_compile=True,
+            lr_scheduler_type="linear",
         )
         self.logger_callback = self.LossAccuracyLogger()
         self.trainer = Trainer(
@@ -225,7 +227,6 @@ class BERTrainer:
         logging.info("Starting training on train set")
         self.trainer.train()
 
-    def eval(self, save_model_threshold: float = 0.8):
         logging.info("Starting evaluation on test set")
         results = self.trainer.evaluate()
         logging.info(f"Evaluation accuracy: {results['eval_accuracy']}")

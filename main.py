@@ -13,8 +13,6 @@ import seaborn as sns
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-trainer = BERTrainer()
-
 
 def plot_confusion_matrix(result_dict, dataset_name):
     conf_mat = confusion_matrix(result_dict["y_true"], result_dict["y_pred"])
@@ -42,17 +40,18 @@ def plot_confusion_matrix(result_dict, dataset_name):
     plt.close()
 
 
-def main(big_data: bool = False, recreate: bool = False):
+def main(big_data: bool = False, recreate: bool = False, skiprf: bool = False):
     if big_data:
         dataset_name = "big_data"
         logger.info("Running in big data mode.")
-        result_dict = big_data_pipeline(dataset_name, recreate)
-        if result_dict is None:
-            logger.error("Skipping dataset due to result error.")
-        else:
-            plot_confusion_matrix(result_dict, dataset_name)
-        trainer.train()
-        trainer.eval()
+        if not skiprf:
+            result_dict = big_data_pipeline(dataset_name, recreate)
+            if result_dict is None:
+                logger.error("Skipping dataset due to result error.")
+            else:
+                plot_confusion_matrix(result_dict, dataset_name)
+        trainer = BERTrainer()
+        trainer.train(save_model_threshold=0.7)
 
     else:
         logger.info("Running in normal mode.")
@@ -71,8 +70,7 @@ def main(big_data: bool = False, recreate: bool = False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run pipeline on datasets.")
     parser.add_argument("--bigdata", action="store_true", help="Run on big data mode")
-    parser.add_argument(
-        "--overwrite", action="store_true", help="Recreate low confidence data"
-    )
+    parser.add_argument("--overwrite", action="store_true", help="Recreate low confidence data")
+    parser.add_argument("--skiprf", action="store_true", help="Skip Random Forest training")
     args = parser.parse_args()
-    main(big_data=args.bigdata, recreate=args.overwrite)
+    main(big_data=args.bigdata, recreate=args.overwrite, skiprf=args.skiprf)
