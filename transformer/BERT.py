@@ -20,20 +20,23 @@ import seaborn as sns
 import config
 from re import sub
 
+
 class BertPrediction:
     def __init__(
         self,
         model_name: str = "distillbert/distilbert-base-uncased",
-        version: str = "0.1"
+        version: str = "0.1",
     ):
         model_dir = f"./BERT/finetuned_models/{sub(r".+/", "", model_name)}_v{version}"
         self.tokenizer = AutoTokenizer.from_pretrained(
-            model_dir,
+            "distilbert/distilbert-base-uncased",
             padding="max_length",
             truncation=True,
             max_length=config.TOKENIZER_MAX_LENGTH,
         )
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_dir)
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            model_dir, local_files_only=True
+        )
 
     def predict(self, text: str):
         classifier = pipeline(
@@ -44,7 +47,7 @@ class BertPrediction:
             truncation=True,
             max_length=config.TOKENIZER_MAX_LENGTH,
         )
-        return classifier(text.lower())
+        return classifier(text)
 
 
 class BERTrainer:
@@ -66,7 +69,9 @@ class BERTrainer:
         self.sanity_check()
 
         # Initialize variables
-        logging.info(f"Filter training dataset by {config.PROBABILITY_THRESHOLD} confidence level")
+        logging.info(
+            f"Filter training dataset by {config.PROBABILITY_THRESHOLD} confidence level"
+        )
         self.df = self.df[
             self.df["confidence"] < config.PROBABILITY_THRESHOLD
         ]  # filter by confidence threshold
@@ -95,7 +100,9 @@ class BERTrainer:
 
         self.model_name = model_name
         self.version = version
-        self.finetuned_model_name = f"{sub(r".+/", "", self.model_name)}_v{self.version}"
+        self.finetuned_model_name = (
+            f"{sub(r".+/", "", self.model_name)}_v{self.version}"
+        )
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         logging.info(f"Model set to version {self.version}")
 
@@ -165,7 +172,10 @@ class BERTrainer:
     # Adding short max length to lower training time
     def tokenize_function(self, examples):
         return self.tokenizer(
-            examples["text"], padding="max_length", truncation=True, max_length=config.TOKENIZER_MAX_LENGTH
+            examples["text"],
+            padding="max_length",
+            truncation=True,
+            max_length=config.TOKENIZER_MAX_LENGTH,
         )
 
     # compute metrics function
@@ -202,7 +212,7 @@ class BERTrainer:
         gradient_accumulation_steps: int = 1,
         num_train_epochs: int = 10,
         logging_steps: int = 500,
-        save_model_threshold: float = 0.8
+        save_model_threshold: float = 0.8,
     ):
 
         if not os.path.exists("training_results"):
@@ -224,7 +234,7 @@ class BERTrainer:
             adam_beta2=0.999,
             adam_epsilon=1e-8,
             bf16=True,
-            #torch_compile=True,
+            # torch_compile=True,
             lr_scheduler_type="linear",
         )
         self.logger_callback = self.LossAccuracyLogger()
