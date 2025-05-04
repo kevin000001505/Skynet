@@ -31,7 +31,7 @@ class BertPrediction:
             model_dir,
             padding="max_length",
             truncation=True,
-            max_length=512,
+            max_length=config.TOKENIZER_MAX_LENGTH,
         )
         self.model = AutoModelForSequenceClassification.from_pretrained(model_dir)
 
@@ -42,7 +42,7 @@ class BertPrediction:
             tokenizer=self.tokenizer,
             padding="max_length",
             truncation=True,
-            max_length=512,
+            max_length=config.TOKENIZER_MAX_LENGTH,
         )
         return classifier(text.lower())
 
@@ -165,7 +165,7 @@ class BERTrainer:
     # Adding short max length to lower training time
     def tokenize_function(self, examples):
         return self.tokenizer(
-            examples["text"], padding="max_length", truncation=True, max_length=256
+            examples["text"], padding="max_length", truncation=True, max_length=config.TOKENIZER_MAX_LENGTH
         )
 
     # compute metrics function

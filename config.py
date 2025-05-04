@@ -60,6 +60,7 @@ MAX_FEATURES = 2000
 PROBABILITY_THRESHOLD = 0.8
 
 MAX_FEATURES = 2000
+TOKENIZER_MAX_LENGTH = 512
 
 REGEX_URL = r"https?://[\w.]+"  # Slightly more robust url regex
 REGEX_HTML_TAGS = {

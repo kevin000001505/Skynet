@@ -17,11 +17,7 @@ nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 from data_processing.cleaning import BaseDataCleaner
 
 cleaner = BaseDataCleaner()
-label_transofrm = {"1": "Positive", "0": "Negative"}
-bert_transform = {
-    "LABEL_0": "Negative",
-    "LABEL_1": "Positive",
-}
+label_transform = {"1": "Positive", "0": "Negative"}
 
 
 @st.cache_resource
@@ -32,7 +28,7 @@ def load_model():
         )
         model_path = os.path.abspath(model_path)
         ml_model = joblib.load(model_path)
-        return ml_model, BertPrediction()
+        return ml_model, BertPrediction(version="0.2")
     except Exception as e:
         st.error(f"Failed to load model: {e}")
         st.error(f"Path attempted: {os.path.abspath(model_path)}")
@@ -50,18 +46,23 @@ def classify_semantic(text, ml_model, bert_model):
     prediction_prob = ml_model.predict_proba([text])
     high_confidence = np.max(prediction_prob, axis=1) > config.PROBABILITY_THRESHOLD
 
+    class_idx = np.argmax(prediction_prob[0])
+    prediction_label = str(class_idx)
+    RFPrediction = label_transform[prediction_label]
+    RFConfidence = f"{np.max(prediction_prob[0]) * 100:.2f}%"
+
     if np.any(high_confidence):
-        class_idx = np.argmax(prediction_prob[0])
-        prediction_label = str(class_idx)
         return {
-            "Prediction": label_transofrm[prediction_label],
-            "Confidence": f"{np.max(prediction_prob[0]) * 100:.2f}%",
+            "RFPrediction": RFPrediction,
+            "RFConfidence": RFConfidence,
         }
     else:
         bert_model_prediction = bert_model.predict(text)
         return {
-            "Prediction": bert_model_prediction[0]["label"],
-            "Confidence": f"{bert_model_prediction[0]['score'] * 100:.2f}%",
+            "RFPrediction": RFPrediction,
+            "RFConfidence": RFConfidence,
+            "BERTPrediction": label_transform[str(bert_model_prediction[0]["label"])],
+            "BERTConfidence": f"{bert_model_prediction[0]['score'] * 100:.2f}%",
         }
 
 
@@ -102,9 +103,23 @@ def main():
         try:
             placeholder.info("Classifying... Please wait while we process your text.")
             result = classify_semantic(clean_text_result, ml_model, bert_model)
-            st.write("### Prediction Result")
-            st.write(f"**Prediction:** {result['Prediction']}")
-            st.write(f"**Confidence:** {result['Confidence']}")
+            st.write("## Prediction Result")
+            if 'BERTPrediction' in result:
+                df = pd.DataFrame({
+                    "Model": ["Random Forest", "distilBERT"],
+                    "Prediction": [result['RFPrediction'], result['BERTPrediction']],
+                    "Confidence": [result['RFConfidence'], result['BERTConfidence']]
+                })
+            else:
+                df = pd.DataFrame({
+                    "Model": ["Random Forest"],
+                    "Prediction": [result['RFPrediction']],
+                    "Confidence": [result['RFConfidence']]
+                })
+            st.markdown(
+                df.style.hide(axis="index").to_html(),
+                unsafe_allow_html=True
+            )
             placeholder.success("Classification complete!")
             placeholder.empty()
         except Exception as e:
@@ -135,7 +150,7 @@ def main():
                     predictions = ml_model.predict(df["cleaned_text"])
                     pred_proba = ml_model.predict_proba(df["cleaned_text"])
                     df["prediction"] = [
-                        label_transofrm[str(pred)] for pred in predictions
+                        label_transform[str(pred)] for pred in predictions
                     ]
                     df["confidence"] = [
                         round(np.max(prob) * 100, 2) for prob in pred_proba
@@ -149,7 +164,7 @@ def main():
                         df.loc[low_confidence_index]["cleaned_text"].to_list()
                     )
                     for idx, item in zip(low_confidence_index, bert_result):
-                        df.at[idx, "prediction"] = bert_transform[item["label"]]
+                        df.at[idx, "prediction"] = label_transform[item["label"]]
                         df.at[idx, "confidence"] = round(item["score"] * 100, 2)
 
                     display_cols = [text_column, "prediction", "confidence"]
