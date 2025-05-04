@@ -47,12 +47,12 @@ def load_csv_data(file_name: str) -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def load_big_data_csv() -> pd.DataFrame:
+def load_big_data_csv(recreate: bool = False) -> pd.DataFrame:
     """
     Load big data CSV files.
     """
     # Check if cleaned big data file exists first before performing cleaning
-    if os.path.exists(config.BIG_DATA_FILE_CLEANED):
+    if os.path.exists(config.BIG_DATA_FILE_CLEANED) and not recreate:
         print("Cleaned big data file exists. Skipping cleaning.")
         return pd.read_csv(config.BIG_DATA_FILE_CLEANED)
 

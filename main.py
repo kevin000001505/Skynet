@@ -68,4 +68,4 @@ if __name__ == "__main__":
     parser.add_argument("--bigdata", action="store_true", help="Run on big data mode")
     parser.add_argument("--overwrite", action="store_true", help="Recreate low confidence data")
     args = parser.parse_args()
-    main(big_data=args.bigdata)
+    main(big_data=args.bigdata, recreate=args.overwrite)
