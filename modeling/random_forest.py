@@ -51,27 +51,28 @@ class RandomForestModel:
     def save_low_confidence_to_csv(
         self,
         x,
-        threshold=0.5,
-        csv_path="low_confidence_samples/{dataset_name}.csv",
-        dataset_name="dataset",
+        # threshold=0.5,
         cleaned_data=None,
+        csv_path="data/SA_cleaned.csv",
     ):
-        csv_path = csv_path.format(dataset_name=dataset_name)
         y_pred = self.pipeline.predict_proba(x)
-        high_confidence_mask = np.max(y_pred, axis=1) > threshold
-        low_confidence_mask = ~high_confidence_mask
-        low_confidence_data = cleaned_data.loc[low_confidence_mask].reset_index(
-            drop=True
-        )
+        cleaned_data["confidnece"] = np.max(y_pred, axis=1).tolist()
+        cleaned_data.to_csv(csv_path, index=False)
+        logger.info(f"Low confidence samples saved to {csv_path}")
+        # high_confidence_mask = np.max(y_pred, axis=1) > threshold
+        # low_confidence_mask = ~high_confidence_mask
+        # low_confidence_data = cleaned_data.loc[low_confidence_mask].reset_index(
+        #     drop=True
+        # )
 
-        try:
-            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
-            if os.path.isdir(csv_path):
-                os.rmdir(csv_path)
-            low_confidence_data.to_csv(csv_path, index=False)
-            logging.info(f"{dataset_name}: Low confidence samples saved to {csv_path}")
-        except Exception as e:
-            logging.error(f"Error saving low confidence samples: {e}")
+        # try:
+        #     os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+        #     if os.path.isdir(csv_path):
+        #         os.rmdir(csv_path)
+        #     low_confidence_data.to_csv(csv_path, index=False)
+        #     logging.info(f"{dataset_name}: Low confidence samples saved to {csv_path}")
+        # except Exception as e:
+        #     logging.error(f"Error saving low confidence samples: {e}")
 
     def save_model(self, output_dir, dataset_name):
         """
@@ -84,24 +85,3 @@ class RandomForestModel:
         model_path = os.path.join(output_dir, model_filename)
         joblib.dump(self.pipeline, model_path)
         logger.info(f"Random Forest pipeline saved to {model_path}")
-
-    def save_tfidf_vectors(self, output_dir, dataset_name):
-        """
-        Save TF-IDF vectorizer to disk after training
-
-        Args:
-            output_dir: Directory to save the vectorizer
-            dataset_name: Name prefix for saved files
-        """
-        os.makedirs(output_dir, exist_ok=True)
-
-        # Get the TF-IDF vectorizer from pipeline
-        tfidf = self.pipeline.named_steps["tfidf"]
-
-        # Save the vectorizer
-        vectorizer_path = os.path.join(
-            output_dir, f"{dataset_name}_tfidf_vectorizer.pkl"
-        )
-        joblib.dump(tfidf, vectorizer_path)
-
-        logger.info(f"TF-IDF vectorizer saved to {vectorizer_path}")

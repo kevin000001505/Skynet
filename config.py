@@ -8,7 +8,7 @@ from data_processing.cleaning import (
     TestingDataCleaner,  # Testing data cleaner
 )  # Import specific cleaners
 
-DATA_DIR = "data/raw_datasets"
+DATA_DIR = "data/raw_datasets/"
 OUTPUT_DIR = "output/"
 MODEL_DIR = "models/"
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -55,7 +55,7 @@ RANDOM_FOREST_PARAMS = {
     "verbose": 1,
 }
 
-PROBABILITY_THRESHOLD = 0.6
+PROBABILITY_THRESHOLD = 0.8
 
 MAX_FEATURES = 2000
 

@@ -110,8 +110,7 @@ def big_data_pipeline(dataset_name: str):
     )
     model.save_low_confidence_to_csv(
         x=cleaned_df["preprocess_text"],
-        threshold=config.PROBABILITY_THRESHOLD,
-        dataset_name=dataset_name,
+        # threshold=config.PROBABILITY_THRESHOLD,
         cleaned_data=cleaned_df,
     )
 
@@ -120,6 +119,5 @@ def big_data_pipeline(dataset_name: str):
     # 6. Save Model
     models_dir = os.path.join(config.PROJECT_ROOT, "models")
     model.save_model(models_dir, dataset_name)
-    model.save_tfidf_vectors(output_dir=models_dir, dataset_name=dataset_name)
 
     return filtered_output
