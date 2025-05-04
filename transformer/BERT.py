@@ -28,13 +28,21 @@ class BertPrediction:
         model_dir: str = "./BERT/training_results/distillbert/distilbert-base-uncased_v0.1",
     ):
         self.tokenizer = AutoTokenizer.from_pretrained(
-            "distilbert/distilbert-base-uncased"
+            "distilbert/distilbert-base-uncased",
+            padding="max_length",
+            truncation=True,
+            max_length=512,
         )
         self.model = AutoModelForSequenceClassification.from_pretrained(model_dir)
 
     def predict(self, text: str):
         classifier = pipeline(
-            "text-classification", model=self.model, tokenizer=self.tokenizer
+            "text-classification",
+            model=self.model,
+            tokenizer=self.tokenizer,
+            padding="max_length",
+            truncation=True,
+            max_length=512,
         )
         return classifier(text)
 

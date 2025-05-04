@@ -13,8 +13,6 @@ import seaborn as sns
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-trainer = BERTrainer()
-
 
 def plot_confusion_matrix(result_dict, dataset_name):
     conf_mat = confusion_matrix(result_dict["y_true"], result_dict["y_pred"])
@@ -51,6 +49,7 @@ def main(big_data: bool = False, recreate: bool = False):
             logger.error("Skipping dataset due to result error.")
         else:
             plot_confusion_matrix(result_dict, dataset_name)
+        trainer = BERTrainer()
         trainer.train()
         trainer.eval()
 
