@@ -56,11 +56,8 @@ RANDOM_FOREST_PARAMS = {
     "n_jobs": -1,
     "verbose": 1,
 }
-
-PROBABILITY_THRESHOLD = 0.8
-
 MAX_FEATURES = 2000
-PROBABILITY_THRESHOLD = 0.7
+PROBABILITY_THRESHOLD = 0.8
 
 REGEX_URL = r"https?://[\w.]+"  # Slightly more robust url regex
 REGEX_HTML_TAGS = {

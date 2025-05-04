@@ -18,6 +18,7 @@ from transformers import TrainerCallback
 import matplotlib.pyplot as plt
 import seaborn as sns
 import config
+from re import sub
 
 class BertPrediction:
     def __init__(
@@ -25,17 +26,15 @@ class BertPrediction:
         model_name: str = "distillbert/distilbert-base-uncased",
         version: str = "0.1"
     ):
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            "distilbert/distilbert-base-uncased"
-        )
-        model_dir = f"./BERT/training_results/{model_name}_v{version}"
+        model_dir = f"./BERT/finetuned_models/{sub(r".+/", "", model_name)}_v{version}"
+        self.tokenizer = AutoTokenizer.from_pretrained(model_dir)
         self.model = AutoModelForSequenceClassification.from_pretrained(model_dir)
 
     def predict(self, text: str):
         classifier = pipeline(
             "text-classification", model=self.model, tokenizer=self.tokenizer
         )
-        return classifier(text)
+        return classifier(text.lower())
 
 
 class BERTrainer:
@@ -86,8 +85,8 @@ class BERTrainer:
 
         self.model_name = model_name
         self.version = version
-        self.finetuned_model_name = self.model_name + "_v" + self.version
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.finetuned_model_name = f"{sub(r".+/", "", self.model_name)}_v{self.version}"
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         logging.info(f"Model set to version {self.version}")
 
         # Convert DataFrames to Hugging Face Datasets
@@ -113,7 +112,10 @@ class BERTrainer:
 
         # Create model
         self.model = AutoModelForSequenceClassification.from_pretrained(
-            model_name, num_labels=num_labels
+            self.model_name,
+            num_labels=num_labels,
+            label2id={0: 0, 1: 1},
+            id2label={0: 0, 1: 1},
         )
 
     def sanity_check(self):
@@ -189,7 +191,7 @@ class BERTrainer:
         per_device_eval_batch_size: int = 128,
         gradient_accumulation_steps: int = 1,
         num_train_epochs: int = 10,
-        logging_steps: int = 100,
+        logging_steps: int = 500,
         save_model_threshold: float = 0.8
     ):
 
@@ -199,6 +201,7 @@ class BERTrainer:
 
         training_args = TrainingArguments(
             output_dir="./BERT/training_results/" + self.finetuned_model_name,
+            overwrite_output_dir=True,
             learning_rate=learning_rate,
             per_device_train_batch_size=per_device_train_batch_size,
             per_device_eval_batch_size=per_device_eval_batch_size,
@@ -232,9 +235,8 @@ class BERTrainer:
         logging.info(f"Evaluation accuracy: {results['eval_accuracy']}")
         logging.info(f"Evaluation loss: {results['eval_loss']}")
 
-        finetuned_model_name = self.model_name + "_v" + self.version
-        model_path = f"./BERT/finetuned_models/{finetuned_model_name}"
-        plot_path = f"./BERT/figures/{finetuned_model_name}"
+        model_path = f"./BERT/finetuned_models/{self.finetuned_model_name}"
+        plot_path = f"./BERT/figures/{self.finetuned_model_name}"
         # Create output dir for models and plots
         os.makedirs(model_path, exist_ok=True)
         os.makedirs(plot_path, exist_ok=True)
@@ -242,6 +244,7 @@ class BERTrainer:
         if results["eval_accuracy"] > save_model_threshold:
             logging.info("Model have high enough accuracy. Saving model")
             self.trainer.save_model(model_path)
+            self.tokenizer.save_pretrained(model_path)
 
             # 1. Plot training loss
             train_epochs, train_losses = zip(*self.logger_callback.train_loss)

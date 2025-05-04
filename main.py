@@ -50,8 +50,8 @@ def main(big_data: bool = False, recreate: bool = False, skiprf: bool = False):
                 logger.error("Skipping dataset due to result error.")
             else:
                 plot_confusion_matrix(result_dict, dataset_name)
-        trainer = BERTrainer()
-        trainer.train(save_model_threshold=0.7)
+        trainer = BERTrainer(use_raw_text=True, version="0.2")
+        trainer.train(save_model_threshold=0.8, num_train_epochs=20)
 
     else:
         logger.info("Running in normal mode.")
@@ -70,7 +70,7 @@ def main(big_data: bool = False, recreate: bool = False, skiprf: bool = False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run pipeline on datasets.")
     parser.add_argument("--bigdata", action="store_true", help="Run on big data mode")
-    parser.add_argument("--overwrite", action="store_true", help="Recreate low confidence data")
+    parser.add_argument("--overwrite", action="store_true", help="Recreate low confidence data. Using --skiprf will ignore this flag")
     parser.add_argument("--skiprf", action="store_true", help="Skip Random Forest training")
     args = parser.parse_args()
     main(big_data=args.bigdata, recreate=args.overwrite, skiprf=args.skiprf)
