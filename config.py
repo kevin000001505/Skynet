@@ -59,6 +59,8 @@ RANDOM_FOREST_PARAMS = {
 MAX_FEATURES = 2000
 PROBABILITY_THRESHOLD = 0.8
 
+MAX_FEATURES = 2000
+
 REGEX_URL = r"https?://[\w.]+"  # Slightly more robust url regex
 REGEX_HTML_TAGS = {
     "Yelp": [r"<[^>]*>", r"br />"],
