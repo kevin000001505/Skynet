@@ -31,9 +31,7 @@ bert_transform = {
 @st.cache_resource
 def load_model():
     try:
-        model_path = os.path.join(
-            os.path.dirname(__file__), "..", "models", "big_data.pkl"
-        )
+        model_path = os.path.join(config.PROJECT_ROOT, "models", "big_data.pkl")
         model_path = os.path.abspath(model_path)
         ml_model = joblib.load(model_path)
         return ml_model, BertPrediction(version="MAX")
@@ -242,7 +240,7 @@ def main():
 
                     labels = sorted(df[label_column].unique())
 
-                    fig, _ = plt.subplots(figsize=(5, 4))
+                    fig, _ = plt.subplots(figsize=(3, 2))
                     sns.heatmap(
                         cm,
                         annot=True,

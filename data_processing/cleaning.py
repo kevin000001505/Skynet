@@ -20,13 +20,6 @@ class BaseDataCleaner:
             "en_core_web_sm", disable=["ner", "parser", "senter", "textcat"]
         )
         self.batch_size = batch_size
-        # self.nlp.add_pipe("spacytextblob") Further implementation needed
-
-    def clean(self, df: pd.DataFrame) -> pd.DataFrame:
-        logging.info(f"NaN values before cleaning: {df.isna().sum()}")
-        df.dropna(inplace=True)
-        df.drop_duplicates(inplace=True)
-        return df
 
     def _process_doc(self, doc):
         clean_tokens = [
@@ -38,12 +31,33 @@ class BaseDataCleaner:
             return " ".join(clean_tokens)
         return doc.text
 
+    def removing_special_characters(
+        self, df: pd.DataFrame, text_columns: str
+    ) -> pd.DataFrame:
+        """
+        Remove special characters from the specified text columns in the DataFrame.
+        """
+        df[text_columns] = df[text_columns].astype(str)
+        df[text_columns] = df[text_columns].apply(
+            lambda x: re.sub(config.REGEX_URL, "", x)
+        )
+        df[text_columns] = df[text_columns].apply(
+            lambda x: re.sub(config.REGEX_HTML_TAGS, "", x)
+        )
+        df[text_columns] = df[text_columns].apply(
+            lambda x: re.sub(config.REGEX_HTML_TAGS2, "", x)
+        )
+        df[text_columns] = df[text_columns].apply(
+            lambda x: re.sub(config.REGEX_UTF8, "", x)
+        )
+        return df
+
     def big_data_clean(self, df: pd.DataFrame) -> pd.DataFrame:
         processed_texts = []
         df = self.clean(df)
         print(CLEANING_TEXT_MESSAGE)
-        texts = df["text"].astype(str).apply(lambda x: re.sub(config.REGEX_URL, "", x))
-        text_list = texts.tolist()
+        df = self.removing_special_characters(df, "text")
+        text_list = df["text"].tolist()
         for doc in tqdm(
             self.nlp.pipe(
                 text_list,

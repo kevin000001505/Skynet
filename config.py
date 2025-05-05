@@ -28,25 +28,47 @@ CLEANING_STRATEGIES = {
 
 DATA_LOCATIONS = {
     # "Testing": [DATA_DIR + "testing.csv"],
-    "Twitter": [DATA_DIR + "Twitter Training Data.csv"],
-    "Movie": [DATA_DIR + "IMDB Dataset.csv"],
+    "Movie": [DATA_DIR + "IMDB.csv"],
     "Normal": [
-        DATA_DIR + "train.csv",
-        DATA_DIR + "test.csv",
+        DATA_DIR + "sa_train.csv",
+        DATA_DIR + "sa_test.csv",
     ],
     "Yelp": [
-        DATA_DIR + "yelp_review_polarity_csv/train.csv",
-        DATA_DIR + "yelp_review_polarity_csv/test.csv",
+        DATA_DIR + "yelp_train.csv",
+        DATA_DIR + "yelp_test.csv",
     ],
 }
 
 TARGET_COLUMNS = {
     "Testing": "label",
-    "Twitter": "label",
     "Movie": "label",
     "Normal": "label",
     "Yelp": "label",
     "default": "label",
+}
+
+MAPPING = {
+    "columns": {
+        "IMDB": {"review": "text", "sentiment": "label"},
+        "sa_train": {"sentiment": "label"},
+        "sa_test": {"sentiment": "label"},
+        "yelp_train": {"review": "text", "sentiment": "label"},
+        "yelp_test": {"review": "text", "sentiment": "label"},
+    },
+    "labels_drop_neutral": {
+        "IMDB": {"positive": 1, "negative": 0},
+        "sa_train": {"positive": 1, "negative": 0},
+        "sa_test": {"positive": 1, "negative": 0},
+        "yelp_train": {2: 1, 1: 0},
+        "yelp_test": {2: 1, 1: 0},
+    },
+    "labels_neutral": {
+        "IMDB": {"positive": 2, "negative": 0},
+        "sa_train": {"positive": 2, "negative": 0, "neutral": 1},
+        "sa_test": {"positive": 2, "negative": 0, "neutral": 1},
+        "yelp_train": {2: 2, 1: 0},
+        "yelp_test": {2: 2, 1: 0},
+    },
 }
 
 RANDOM_FOREST_PARAMS = {
@@ -63,9 +85,11 @@ MAX_FEATURES = 2000
 TOKENIZER_MAX_LENGTH = 512
 
 REGEX_URL = r"https?://[\w.]+"  # Slightly more robust url regex
-REGEX_HTML_TAGS = {
-    "Yelp": [r"<[^>]*>", r"br />"],
-}
-REGEX_UTF8 = {
-    "Yelp": r"[c|C]af\\u00e\d",
-}
+
+REGEX_HTML_TAGS = r"<[^>]*>"
+
+REGEX_HTML_TAGS2 = r"br />"
+
+REGEX_UTF8 = r"[c|C]af\\u00e\d"
+
+REGEX_CSV_NAME = r"\/([^\/]+)\.csv"
