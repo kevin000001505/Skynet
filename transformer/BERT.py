@@ -213,6 +213,11 @@ class BERTrainer:
         num_train_epochs: int = 10,
         logging_steps: int = 500,
         save_model_threshold: float = 0.8,
+        metric_for_best_model="accuracy",
+        eval_steps: int = 500,
+        save_steps: int = 1000,
+        eval_strategy: str = "steps",
+        save_strategy: str = "steps",
     ):
 
         if not os.path.exists("training_results"):
@@ -233,9 +238,17 @@ class BERTrainer:
             adam_beta1=0.9,
             adam_beta2=0.999,
             adam_epsilon=1e-8,
-            bf16=True,
-            # torch_compile=True,
+            # bf16=True,
+            torch_compile=True,
             lr_scheduler_type="linear",
+            eval_strategy=eval_strategy,
+            eval_steps=eval_steps,
+            save_strategy=save_strategy,
+            save_steps=save_steps,
+            save_total_limit=1,
+            metric_for_best_model=metric_for_best_model,
+            greater_is_better=True,
+            load_best_model_at_end=True,
         )
         self.logger_callback = self.LossAccuracyLogger()
         self.trainer = Trainer(
