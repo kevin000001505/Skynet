@@ -20,7 +20,7 @@ import seaborn as sns
 import config
 from re import sub
 from shutil import rmtree
-
+import numpy as np
 
 class BertPrediction:
     def __init__(
@@ -298,7 +298,7 @@ class BERTrainer:
             )
 
             # 3. Confusion matrix
-            cm = confusion_matrix(labels, preds)
+            cm = confusion_matrix(labels, preds, normalize='true')
             plt.figure(figsize=(5, 4))
             sns.heatmap(
                 cm,
