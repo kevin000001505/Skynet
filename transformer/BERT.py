@@ -26,7 +26,7 @@ class BertPrediction:
         version: str = "0.1",
     ):
         # Use the fold with best accuracy
-        max_accuracy = 0
+        max_accuracy = -1
         fold = 1
         for i, folder in enumerate(os.listdir(f"./BERT/figures/model_v{version}")):
             with open(f"./BERT/figures/model_v{version}/{folder}/metrics_{folder}.txt", "r") as f:
@@ -35,6 +35,11 @@ class BertPrediction:
                 if accuracy > max_accuracy:
                     max_accuracy = accuracy
                     fold = i
+        if max_accuracy == -1:
+            raise FileNotFoundError(
+                f"No valid metrics folder found. Please check your BERT/figures/model_v{version} folder"
+            )
+        logging.info(f"Using best distilBERT model at fold {fold} with accuracy {max_accuracy}.")
         
         model_dir = f"./BERT/finetuned_models/model_v{version}/fold_{fold}"
         self.tokenizer = AutoTokenizer.from_pretrained(
