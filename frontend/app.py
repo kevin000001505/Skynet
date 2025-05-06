@@ -22,11 +22,6 @@ from data_processing.cleaning import BaseDataCleaner
 
 cleaner = BaseDataCleaner()
 label_transform = {"1": "Positive", "0": "Negative"}
-bert_transform = {
-    "LABEL_0": "Negative",
-    "LABEL_1": "Positive",
-}
-
 
 @st.cache_resource
 def load_model():
@@ -68,7 +63,7 @@ def classify_semantic(text, ml_model, bert_model):
         return {
             "RFPrediction": RFPrediction,
             "RFConfidence": RFConfidence,
-            "BERTPrediction": bert_transform[str(bert_model_prediction[0]["label"])],
+            "BERTPrediction": label_transform[str(bert_model_prediction[0]["label"])],
             "BERTConfidence": f"{bert_model_prediction[0]['score'] * 100:.2f}%",
         }
 
@@ -224,7 +219,7 @@ def main():
                         df.loc[low_confidence_index][text_column].to_list()
                     )
                     for idx, item in zip(low_confidence_index, bert_result):
-                        df.at[idx, "prediction"] = bert_transform[item["label"]]
+                        df.at[idx, "prediction"] = label_transform[item["label"]]
                         df.at[idx, "confidence"] = round(item["score"] * 100, 2)
 
                     display_cols = [text_column, "prediction", "confidence"]

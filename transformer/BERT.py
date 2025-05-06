@@ -12,22 +12,31 @@ from sklearn.metrics import (
     precision_recall_fscore_support,
     confusion_matrix,
 )
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 import logging, torch, os
 from transformers import TrainerCallback
 import matplotlib.pyplot as plt
 import seaborn as sns
 import config
-from re import sub
 from shutil import rmtree
-import numpy as np
 
 class BertPrediction:
     def __init__(
         self,
         version: str = "0.1",
     ):
-        model_dir = f"./BERT/finetuned_models/model_v{version}"
+        # Use the fold with best accuracy
+        max_accuracy = 0
+        fold = 1
+        for i, folder in enumerate(os.listdir(f"./BERT/figures/model_v{version}")):
+            with open(f"./BERT/figures/model_v{version}/{folder}/metrics_{folder}.txt", "r") as f:
+                text = f.readline()
+                accuracy = float(text.split()[1])
+                if accuracy > max_accuracy:
+                    max_accuracy = accuracy
+                    fold = i
+        
+        model_dir = f"./BERT/finetuned_models/model_v{version}/fold_{fold}"
         self.tokenizer = AutoTokenizer.from_pretrained(
             "distilbert/distilbert-base-uncased",
             padding="max_length",
@@ -102,7 +111,7 @@ class BERTrainer:
 
         # Initialize K-Fold for cross validation
         logging.info(f"Initialize cross validation using {k} folds")
-        self.kf = KFold(n_splits=k, shuffle=True, random_state=42)
+        self.kf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
 
         # Assign accelerators
         if torch.cuda.is_available():
@@ -278,11 +287,11 @@ class BERTrainer:
             train_epochs, train_losses = zip(*self.logger_callback.train_loss)
             plt.figure(figsize=(8, 5))
             plt.plot(train_epochs, train_losses, marker="o")
-            plt.title("Training Loss per Epoch")
+            plt.title(f"Training Loss per Epoch for distilBERT at fold {fold + 1}")
             plt.xlabel("Epoch")
             plt.ylabel("Loss")
             plt.tight_layout()
-            plt.savefig(f"{plot_path}/loss_curve.png")
+            plt.savefig(f"{plot_path}/loss_curve_fold_{fold + 1}.png")
             plt.close()
             logging.info("Saved training loss curve plot")
 
@@ -301,7 +310,7 @@ class BERTrainer:
             cm = confusion_matrix(labels, preds, normalize='true')
 
              # 4. Save metrics
-            with open(f"{plot_path}/metrics.txt", "w") as f:
+            with open(f"{plot_path}/metrics_fold_{fold + 1}.txt", "w") as f:
                 f.write(f"Accuracy: {acc:.4f}\n")
                 f.write(f"Precision: {precision:.4f}\n")
                 f.write(f"Recall: {recall:.4f}\n")
@@ -321,9 +330,9 @@ class BERTrainer:
             )
             plt.xlabel("Predicted")
             plt.ylabel("True")
-            plt.title("Confusion Matrix")
+            plt.title(f"Confusion Matrix for distilBERT at fold {fold + 1}")
             plt.tight_layout()
-            plt.savefig(f"{plot_path}/confusion_matrix.png")
+            plt.savefig(f"{plot_path}/confusion_matrix_fold_{fold + 1}.png")
             plt.close()
             logging.info("Saved confustion matrix")
     

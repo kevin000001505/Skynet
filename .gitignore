@@ -13,4 +13,5 @@ results
 LSTM.ipynb
 models/hybrid_model_state.pt
 plots/Whole Model.png
-BERT
+BERT/finetuned_models
+BERT/training_results
