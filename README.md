@@ -21,4 +21,4 @@ python main.py
 ```bash
 python main.py --bigdata
 ```
-A Random Forest model will be trained first and it's model stored in ```models.big_data.pkl```, subsequent run will skip Random Forest training if a model has been trained. Use the ```--recreate``` flag to force retraining and starts predicting using the saved model. The model will then goes on to train a distilBERT model using the low confidence data. To skip Random Forest altogether, use the ```--skiprf``` flag.
+A Random Forest model will be trained first and it's model stored in ```models.big_data.pkl```, subsequent runs will skip Random Forest training if a model has been trained. Use the ```--recreate``` flag to force retraining and starts predicting using the saved model. The model will then goes on to train a distilBERT model using the low confidence data. To skip Random Forest altogether, use the ```--skiprf``` flag.
