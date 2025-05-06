@@ -6,7 +6,7 @@
 ### Dataset
 ### train, test: https://www.kaggle.com/datasets/abhi8923shriv/sentiment-analysis-dataset?select=testdata.manual.2009.06.14.csv
 ### Yelp: https://www.kaggle.com/datasets/ilhamfp31/yelp-review-dataset
-### Twitter: https://www.kaggle.com/datasets/jp797498e/twitter-entity-sentiment-analysis
+### 10000 Restaurant Reviews: https://www.kaggle.com/datasets/joebeachcapital/restaurant-reviews
 ### IMDB: https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews
 
 ```bash
@@ -21,3 +21,4 @@ python main.py
 ```bash
 python main.py --bigdata
 ```
+A Random Forest model will be trained first and it's model stored in ```models.big_data.pkl```, subsequent run will skip Random Forest training if a model has been trained. Use the ```--recreate``` flag to force retraining and starts predicting using the saved model. The model will then goes on to train a distilBERT model using the low confidence data. To skip Random Forest altogether, use the ```--skiprf``` flag.
