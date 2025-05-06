@@ -299,11 +299,22 @@ class BERTrainer:
 
             # 3. Confusion matrix
             cm = confusion_matrix(labels, preds, normalize='true')
+
+             # 4. Save metrics
+            with open(f"{plot_path}/metrics.txt", "w") as f:
+                f.write(f"Accuracy: {acc:.4f}\n")
+                f.write(f"Precision: {precision:.4f}\n")
+                f.write(f"Recall: {recall:.4f}\n")
+                f.write(f"F1 Score: {f1:.4f}\n")
+                f.write(f"Confusion matrix:\n{cm}")
+                logging.info("Saved evaluation metrics")
+
+            # 5. Save confusion matrix as plot
             plt.figure(figsize=(5, 4))
             sns.heatmap(
                 cm,
                 annot=True,
-                fmt="d",
+                fmt=".2f",
                 cmap="Blues",
                 xticklabels=["0", "1"],
                 yticklabels=["0", "1"],
@@ -315,17 +326,6 @@ class BERTrainer:
             plt.savefig(f"{plot_path}/confusion_matrix.png")
             plt.close()
             logging.info("Saved confustion matrix")
-
-            # 4. Save metrics
-            with open(f"{plot_path}/metrics.txt", "w") as f:
-                f.write(f"Accuracy: {acc:.4f}\n")
-                f.write(f"Precision: {precision:.4f}\n")
-                f.write(f"Recall: {recall:.4f}\n")
-                f.write(f"F1 Score: {f1:.4f}\n")
-                f.write(f"Confusion matrix:\n{cm}")
-                logging.info("Saved evaluation metrics")
-
-        
     
         # Clean up space after training
         rmtree("BERT/training_results", ignore_errors=True)
