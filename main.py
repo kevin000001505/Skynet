@@ -50,16 +50,18 @@ def main(big_data: bool = False, recreate: bool = False, skiprf: bool = False):
                 logger.error("Skipping dataset due to result error.")
             else:
                 plot_confusion_matrix(result_dict, dataset_name)
-        trainer = BERTrainer(use_raw_text=True, version="0.2")
+        trainer = BERTrainer(use_threshold=True, version="1")
         trainer.train(
             save_model_threshold=0.8,
-            num_train_epochs=20,
             learning_rate=5e-6,
             per_device_train_batch_size=32,
-            num_train_epochs=4,
-            metric_for_best_model="specificity",
-            eval_steps=400,
+            num_train_epochs=3,
+            metric_for_best_model="accuracy",
+            eval_steps=1000,
             save_steps=800,
+            eval_strategy="epoch",
+            save_strategy="best",
+            dataloader_num_workers=4
         )
 
     else:

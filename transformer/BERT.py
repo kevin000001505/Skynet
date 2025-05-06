@@ -12,22 +12,22 @@ from sklearn.metrics import (
     precision_recall_fscore_support,
     confusion_matrix,
 )
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 import logging, torch, os
 from transformers import TrainerCallback
 import matplotlib.pyplot as plt
 import seaborn as sns
 import config
 from re import sub
+from shutil import rmtree
 
 
 class BertPrediction:
     def __init__(
         self,
-        model_name: str = "distillbert/distilbert-base-uncased",
         version: str = "0.1",
     ):
-        model_dir = f"./BERT/finetuned_models/{sub(r".+/", "", model_name)}_v{version}"
+        model_dir = f"./BERT/finetuned_models/model_v{version}"
         self.tokenizer = AutoTokenizer.from_pretrained(
             "distilbert/distilbert-base-uncased",
             padding="max_length",
@@ -53,10 +53,10 @@ class BertPrediction:
 class BERTrainer:
     def __init__(
         self,
-        use_raw_text: bool = False,
-        test_size: float = 0.3,
+        k: int = 5,
         model_name: str = "distilbert/distilbert-base-uncased",
         num_labels: int = 2,
+        use_threshold: bool = False,
         version: str = "0.1",
     ):
         # Load dataset with random forest confidence levels
@@ -69,54 +69,40 @@ class BERTrainer:
         self.sanity_check()
 
         # Initialize variables
-        logging.info(
-            f"Filter training dataset by {config.PROBABILITY_THRESHOLD} confidence level"
-        )
-        self.df = self.df[
-            self.df["confidence"] < config.PROBABILITY_THRESHOLD
-        ]  # filter by confidence threshold
-        logging.info("Structure of filtered dataset:")
-        self.df.info(verbose=True)
-        logging.info(f"Split train/test sets with {test_size} test set size")
-        df_train, df_test = train_test_split(
-            self.df, test_size=test_size, shuffle=True, random_state=42
-        )
-
-        if use_raw_text:
-            logging.info("Using raw text")
-            df_train = df_train[["text", "label"]]
-            df_test = df_test[["text", "label"]]
+        if use_threshold:
+            logging.info(
+                f"Filter training dataset by {config.PROBABILITY_THRESHOLD} confidence level"
+            )
+            self.df = self.df[
+                self.df["confidence"] < config.PROBABILITY_THRESHOLD
+            ]  # filter by confidence threshold
         else:
-            logging.info("Using pre-processed text")
-            df_train = df_train[["preprocess_text", "label"]]
-            df_test = df_test[["preprocess_text", "label"]]
-            df_train = df_train.rename(columns={"preprocess_text": "text"})
-            df_test = df_test.rename(columns={"preprocess_text": "text"})
+            logging.info("Use all dataset for training")
 
-        logging.info("Structure of train data:")
-        df_train.info(verbose=True)
-        logging.info("Structure of test data:")
-        df_test.info(verbose=True)
+        if use_threshold:
+            logging.info(f"Structure of filtered dataset:")
+            self.df.info(verbose=True)
+        self.df = self.df[["text", "label"]] # Keep only raw text and label
 
         self.model_name = model_name
         self.version = version
-        self.finetuned_model_name = (
-            f"{sub(r".+/", "", self.model_name)}_v{self.version}"
-        )
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        self.finetuned_model_name = f"model_v{self.version}"
         logging.info(f"Model set to version {self.version}")
 
+        # Init tokenizer
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+
         # Convert DataFrames to Hugging Face Datasets
-        train_dataset = Dataset.from_pandas(df_train[["text", "label"]])
-        test_dataset = Dataset.from_pandas(df_test[["text", "label"]])
+        dataset = Dataset.from_pandas(self.df[["text", "label"]])
 
         # Tokenize HF datasets, this is the dataset that will be used in training and evaluating
-        self.tokenized_train_dataset = train_dataset.map(
+        self.tokenized_dataset = dataset.map(
             self.tokenize_function, batched=True
         )
-        self.tokenized_test_dataset = test_dataset.map(
-            self.tokenize_function, batched=True
-        )
+
+        # Initialize K-Fold for cross validation
+        logging.info(f"Initialize cross validation using {k} folds")
+        self.kf = KFold(n_splits=k, shuffle=True, random_state=42)
 
         # Assign accelerators
         if torch.cuda.is_available():
@@ -127,13 +113,7 @@ class BERTrainer:
             self.device = "cpu"
         logging.info(f"Accelerator device: {self.device}")
 
-        # Create model
-        self.model = AutoModelForSequenceClassification.from_pretrained(
-            self.model_name,
-            num_labels=num_labels,
-            label2id={0: 0, 1: 1},
-            id2label={0: 0, 1: 1},
-        )
+        self.num_labels = num_labels
 
     def sanity_check(self):
         # Sanity check on dataset
@@ -206,12 +186,13 @@ class BERTrainer:
 
     def train(
         self,
-        learning_rate: float = 1e-5,
+        dataloader_num_workers: int = 4, # Change according the the amount of system ram
+        learning_rate: float = 5e-6,
         per_device_train_batch_size: int = 16,
         per_device_eval_batch_size: int = 128,
         gradient_accumulation_steps: int = 1,
-        num_train_epochs: int = 10,
-        logging_steps: int = 500,
+        num_train_epochs: int = 4,
+        logging_steps: int = 1000,
         save_model_threshold: float = 0.8,
         metric_for_best_model="accuracy",
         eval_steps: int = 500,
@@ -219,65 +200,79 @@ class BERTrainer:
         eval_strategy: str = "steps",
         save_strategy: str = "steps",
     ):
+        # Clean up space before training
+        rmtree("BERT/training_results", ignore_errors=True)
 
-        if not os.path.exists("training_results"):
-            logging.debug("training_results folder doesn't exist. Creating one now")
-            os.mkdir("training_results")
+        # Begin training
+        for fold, (train_idx, val_idx) in enumerate(self.kf.split(self.df)):
+            logging.info(f"Fold {fold + 1}")
 
-        training_args = TrainingArguments(
-            output_dir="./BERT/training_results/" + self.finetuned_model_name,
-            overwrite_output_dir=True,
-            learning_rate=learning_rate,
-            per_device_train_batch_size=per_device_train_batch_size,
-            per_device_eval_batch_size=per_device_eval_batch_size,
-            gradient_accumulation_steps=gradient_accumulation_steps,
-            num_train_epochs=num_train_epochs,
-            dataloader_num_workers=5,
-            logging_steps=logging_steps,
-            optim="adamw_torch",
-            adam_beta1=0.9,
-            adam_beta2=0.999,
-            adam_epsilon=1e-8,
-            # bf16=True,
-            torch_compile=True,
-            lr_scheduler_type="linear",
-            eval_strategy=eval_strategy,
-            eval_steps=eval_steps,
-            save_strategy=save_strategy,
-            save_steps=save_steps,
-            save_total_limit=1,
-            metric_for_best_model=metric_for_best_model,
-            greater_is_better=True,
-            load_best_model_at_end=True,
-        )
-        self.logger_callback = self.LossAccuracyLogger()
-        self.trainer = Trainer(
-            model=self.model,
-            args=training_args,
-            train_dataset=self.tokenized_train_dataset,
-            eval_dataset=self.tokenized_test_dataset,
-            compute_metrics=self.compute_metrics,
-            callbacks=[self.logger_callback],
-        )
-        logging.debug(f"Training arguments: {self.trainer.args}")
-        logging.info("Starting training on train set")
-        self.trainer.train()
+            training_args = TrainingArguments(
+                output_dir=f"./BERT/training_results/{self.finetuned_model_name}/fold_{fold + 1}",
+                overwrite_output_dir=True,
+                learning_rate=learning_rate,
+                per_device_train_batch_size=per_device_train_batch_size,
+                per_device_eval_batch_size=per_device_eval_batch_size,
+                gradient_accumulation_steps=gradient_accumulation_steps,
+                num_train_epochs=num_train_epochs,
+                dataloader_num_workers=dataloader_num_workers,
+                logging_steps=logging_steps,
+                optim="adamw_torch",
+                adam_beta1=0.9,
+                adam_beta2=0.999,
+                adam_epsilon=1e-8,
+                lr_scheduler_type="linear",
+                seed=42,
+                eval_strategy=eval_strategy,
+                eval_steps=eval_steps,
+                save_strategy=save_strategy,
+                save_steps=save_steps,
+                save_total_limit=1,
+                metric_for_best_model=metric_for_best_model,
+                greater_is_better=True,
+                load_best_model_at_end=True,
+            )
 
-        logging.info("Starting evaluation on test set")
-        results = self.trainer.evaluate()
-        logging.info(f"Evaluation accuracy: {results['eval_accuracy']}")
-        logging.info(f"Evaluation loss: {results['eval_loss']}")
+            # Split data into train/test sets
+            tokenized_train_dataset = self.tokenized_dataset.select(train_idx)
+            tokenized_test_dataset = self.tokenized_dataset.select(val_idx)
 
-        model_path = f"./BERT/finetuned_models/{self.finetuned_model_name}"
-        plot_path = f"./BERT/figures/{self.finetuned_model_name}"
-        # Create output dir for models and plots
-        os.makedirs(model_path, exist_ok=True)
-        os.makedirs(plot_path, exist_ok=True)
+            # Create model
+            self.model = AutoModelForSequenceClassification.from_pretrained(
+                self.model_name,
+                num_labels=self.num_labels,
+                label2id={0: 0, 1: 1},
+                id2label={0: 0, 1: 1},
+            )
+            
+            self.logger_callback = self.LossAccuracyLogger()
+            self.trainer = Trainer(
+                model=self.model,
+                args=training_args,
+                train_dataset=tokenized_train_dataset,
+                eval_dataset=tokenized_test_dataset,
+                compute_metrics=self.compute_metrics,
+                callbacks=[self.logger_callback],
+            )
+            logging.debug(f"Training arguments: {self.trainer.args}")
+            logging.info("Starting training on train set")
+            self.trainer.train()
 
-        if results["eval_accuracy"] > save_model_threshold:
-            logging.info("Model have high enough accuracy. Saving model")
-            self.trainer.save_model(model_path)
-            self.tokenizer.save_pretrained(model_path)
+            logging.info("Starting evaluation on test set")
+            results = self.trainer.evaluate()
+            logging.info(f"Evaluation accuracy: {results['eval_accuracy']}")
+            logging.info(f"Evaluation loss: {results['eval_loss']}")
+
+            model_path = f"./BERT/finetuned_models/{self.finetuned_model_name}/fold_{fold + 1}"
+            plot_path = f"./BERT/figures/{self.finetuned_model_name}/fold_{fold + 1}"
+            # Create output dir for models and plots
+            os.makedirs(model_path, exist_ok=True)
+            os.makedirs(plot_path, exist_ok=True)
+
+            if results["eval_accuracy"] > save_model_threshold:
+                logging.info("Model have high enough accuracy. Saving model")
+                self.trainer.save_model(model_path)
+                self.tokenizer.save_pretrained(model_path)
 
             # 1. Plot training loss
             train_epochs, train_losses = zip(*self.logger_callback.train_loss)
@@ -292,7 +287,7 @@ class BERTrainer:
             logging.info("Saved training loss curve plot")
 
             # 2. Get predictions on test set
-            preds_output = self.trainer.predict(self.tokenized_test_dataset)
+            preds_output = self.trainer.predict(tokenized_test_dataset)
             preds = preds_output.predictions.argmax(-1)
             labels = preds_output.label_ids
 
@@ -302,15 +297,7 @@ class BERTrainer:
                 labels, preds, average="binary"
             )
 
-            # 3. Save metrics
-            with open(f"{plot_path}/metrics.txt", "w") as f:
-                f.write(f"Accuracy: {acc:.4f}\n")
-                f.write(f"Precision: {precision:.4f}\n")
-                f.write(f"Recall: {recall:.4f}\n")
-                f.write(f"F1 Score: {f1:.4f}\n")
-                logging.info("Saved evaluation metrics")
-
-            # 4. Confusion matrix
+            # 3. Confusion matrix
             cm = confusion_matrix(labels, preds)
             plt.figure(figsize=(5, 4))
             sns.heatmap(
@@ -328,3 +315,17 @@ class BERTrainer:
             plt.savefig(f"{plot_path}/confusion_matrix.png")
             plt.close()
             logging.info("Saved confustion matrix")
+
+            # 4. Save metrics
+            with open(f"{plot_path}/metrics.txt", "w") as f:
+                f.write(f"Accuracy: {acc:.4f}\n")
+                f.write(f"Precision: {precision:.4f}\n")
+                f.write(f"Recall: {recall:.4f}\n")
+                f.write(f"F1 Score: {f1:.4f}\n")
+                f.write(f"Confusion matrix:\n{cm}")
+                logging.info("Saved evaluation metrics")
+
+        
+    
+        # Clean up space after training
+        rmtree("BERT/training_results", ignore_errors=True)

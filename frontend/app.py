@@ -34,7 +34,7 @@ def load_model():
         model_path = os.path.join(config.PROJECT_ROOT, "models", "big_data.pkl")
         model_path = os.path.abspath(model_path)
         ml_model = joblib.load(model_path)
-        return ml_model, BertPrediction(version="MAX")
+        return ml_model, BertPrediction(version="1")
     except Exception as e:
         st.error(f"Failed to load model: {e}")
         st.error(f"Path attempted: {os.path.abspath(model_path)}")
