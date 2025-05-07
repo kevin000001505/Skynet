@@ -20,6 +20,7 @@ import seaborn as sns
 import config
 from shutil import rmtree
 
+
 class BertPrediction:
     def __init__(
         self,
@@ -29,7 +30,9 @@ class BertPrediction:
         max_accuracy = -1
         fold = 1
         for i, folder in enumerate(os.listdir(f"./BERT/figures/model_v{version}")):
-            with open(f"./BERT/figures/model_v{version}/{folder}/metrics_{folder}.txt", "r") as f:
+            with open(
+                f"./BERT/figures/model_v{version}/{folder}/metrics_{folder}.txt", "r"
+            ) as f:
                 text = f.readline()
                 accuracy = float(text.split()[1])
                 if accuracy > max_accuracy:
@@ -39,8 +42,10 @@ class BertPrediction:
             raise FileNotFoundError(
                 f"No valid metrics folder found. Please check your BERT/figures/model_v{version} folder"
             )
-        logging.info(f"Using best distilBERT model at fold {fold} with accuracy {max_accuracy}.")
-        
+        logging.info(
+            f"Using best distilBERT model at fold {fold} with accuracy {max_accuracy}."
+        )
+
         model_dir = f"./BERT/finetuned_models/model_v{version}/fold_{fold}"
         self.tokenizer = AutoTokenizer.from_pretrained(
             "distilbert/distilbert-base-uncased",
@@ -94,9 +99,9 @@ class BERTrainer:
             logging.info("Use all dataset for training")
 
         if use_threshold:
-            logging.info(f"Structure of filtered dataset:")
+            logging.info("Structure of filtered dataset:")
             self.df.info(verbose=True)
-        self.df = self.df[["text", "label"]] # Keep only raw text and label
+        self.df = self.df[["text", "label"]]  # Keep only raw text and label
 
         self.model_name = model_name
         self.version = version
@@ -110,9 +115,7 @@ class BERTrainer:
         dataset = Dataset.from_pandas(self.df[["text", "label"]])
 
         # Tokenize HF datasets, this is the dataset that will be used in training and evaluating
-        self.tokenized_dataset = dataset.map(
-            self.tokenize_function, batched=True
-        )
+        self.tokenized_dataset = dataset.map(self.tokenize_function, batched=True)
 
         # Initialize K-Fold for cross validation
         logging.info(f"Initialize cross validation using {k} folds")
@@ -200,7 +203,7 @@ class BERTrainer:
 
     def train(
         self,
-        dataloader_num_workers: int = 4, # Change according the the amount of system ram
+        dataloader_num_workers: int = 4,  # Change according the the amount of system ram
         learning_rate: float = 5e-6,
         per_device_train_batch_size: int = 16,
         per_device_eval_batch_size: int = 128,
@@ -218,7 +221,9 @@ class BERTrainer:
         rmtree("BERT/training_results", ignore_errors=True)
 
         # Begin training
-        for fold, (train_idx, val_idx) in enumerate(self.kf.split(self.df, self.df['label'])):
+        for fold, (train_idx, val_idx) in enumerate(
+            self.kf.split(self.df, self.df["label"])
+        ):
             logging.info(f"Fold {fold + 1}")
 
             training_args = TrainingArguments(
@@ -258,7 +263,7 @@ class BERTrainer:
                 label2id={0: 0, 1: 1},
                 id2label={0: 0, 1: 1},
             )
-            
+
             self.logger_callback = self.LossAccuracyLogger()
             self.trainer = Trainer(
                 model=self.model,
@@ -277,7 +282,9 @@ class BERTrainer:
             logging.info(f"Evaluation accuracy: {results['eval_accuracy']}")
             logging.info(f"Evaluation loss: {results['eval_loss']}")
 
-            model_path = f"./BERT/finetuned_models/{self.finetuned_model_name}/fold_{fold + 1}"
+            model_path = (
+                f"./BERT/finetuned_models/{self.finetuned_model_name}/fold_{fold + 1}"
+            )
             plot_path = f"./BERT/figures/{self.finetuned_model_name}/fold_{fold + 1}"
             # Create output dir for models and plots
             os.makedirs(model_path, exist_ok=True)
@@ -312,9 +319,9 @@ class BERTrainer:
             )
 
             # 3. Confusion matrix
-            cm = confusion_matrix(labels, preds, normalize='all') * 100
+            cm = confusion_matrix(labels, preds, normalize="all") * 100
 
-             # 4. Save metrics
+            # 4. Save metrics
             with open(f"{plot_path}/metrics_fold_{fold + 1}.txt", "w") as f:
                 f.write(f"Accuracy: {acc:.4f}\n")
                 f.write(f"Precision: {precision:.4f}\n")
@@ -340,6 +347,7 @@ class BERTrainer:
             plt.savefig(f"{plot_path}/confusion_matrix_fold_{fold + 1}.png")
             plt.close()
             logging.info("Saved confustion matrix")
-    
+
         # Clean up space after training
         rmtree("BERT/training_results", ignore_errors=True)
+        return {"y_true": labels, "y_pred": preds, "dataset_name": "distilBERT"}

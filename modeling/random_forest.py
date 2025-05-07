@@ -4,6 +4,7 @@ import os
 import config
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import KFold, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 import joblib
 
@@ -20,9 +21,30 @@ class RandomForestModel:
                 ("rf", RandomForestClassifier(**params)),
             ]
         )
+        self.params = params
+
+    def _get_cv_search_object(self):
+        return RandomizedSearchCV(
+            estimator=self.pipeline,
+            param_distributions=config.RANDOM_FOREST_GRID_PARAMS,
+            n_iter=10,  # Number of parameter settings that are sampled
+            cv=3,
+            scoring="accuracy",
+            random_state=42,
+            n_jobs=-1,
+            verbose=3,
+            refit=True,
+            return_train_score=True,
+        )
 
     def train(self, x_train, y_train):
-        self.pipeline.fit(x_train, y_train)
+        if self.params is None:
+            logger.info("Starting RandomizedSearchCV for hyperparameter tuning")
+            random_search = self._get_cv_search_object()
+            random_search.fit(x_train, y_train)
+            self.pipeline = random_search.best_estimator_
+        else:
+            self.pipeline.fit(x_train, y_train)
         self.model_class = self.pipeline.named_steps["rf"].classes_
 
     def predict(self, x_test):
@@ -51,7 +73,6 @@ class RandomForestModel:
     def save_low_confidence_to_csv(
         self,
         x,
-        # threshold=0.5,
         cleaned_data=None,
         csv_path=config.BIG_DATA_FILE_CLEANED,
     ):
@@ -59,20 +80,6 @@ class RandomForestModel:
         cleaned_data["confidence"] = np.max(y_pred, axis=1).tolist()
         cleaned_data.to_csv(csv_path, index=False)
         logger.info(f"Low confidence samples saved to {csv_path}")
-        # high_confidence_mask = np.max(y_pred, axis=1) > threshold
-        # low_confidence_mask = ~high_confidence_mask
-        # low_confidence_data = cleaned_data.loc[low_confidence_mask].reset_index(
-        #     drop=True
-        # )
-
-        # try:
-        #     os.makedirs(os.path.dirname(csv_path), exist_ok=True)
-        #     if os.path.isdir(csv_path):
-        #         os.rmdir(csv_path)
-        #     low_confidence_data.to_csv(csv_path, index=False)
-        #     logging.info(f"{dataset_name}: Low confidence samples saved to {csv_path}")
-        # except Exception as e:
-        #     logging.error(f"Error saving low confidence samples: {e}")
 
     def save_model(self, output_dir, dataset_name):
         """

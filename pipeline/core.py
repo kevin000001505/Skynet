@@ -76,7 +76,7 @@ def run_pipeline_for_dataset(dataset_name: str):
     return filtered_output
 
 
-def big_data_pipeline(dataset_name: str, recreate: bool = False):
+def big_data_pipeline(model_name: str, recreate: bool = False):
     """Runs the pipeline for big data."""
     big_data = load_big_data_csv(recreate)
 
@@ -118,6 +118,6 @@ def big_data_pipeline(dataset_name: str, recreate: bool = False):
 
     # 6. Save Model
     models_dir = os.path.join(config.PROJECT_ROOT, "models")
-    model.save_model(models_dir, dataset_name)
+    model.save_model(models_dir, model_name)
 
     return filtered_output

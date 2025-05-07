@@ -23,10 +23,11 @@ from data_processing.cleaning import BaseDataCleaner
 cleaner = BaseDataCleaner()
 label_transform = {"1": "Positive", "0": "Negative"}
 
+
 @st.cache_resource
 def load_model():
     try:
-        model_path = os.path.join(config.PROJECT_ROOT, "models", "big_data.pkl")
+        model_path = os.path.join(config.PROJECT_ROOT, "models", "Random Forest.pkl")
         model_path = os.path.abspath(model_path)
         ml_model = joblib.load(model_path)
         return ml_model, BertPrediction(version="1")
