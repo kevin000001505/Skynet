@@ -35,4 +35,4 @@ Training results for the distilBERT model is stored in ```./BERT/figures/model_v
 - ```metrics*.txt```: Store statistical scores as well as the confusion matrix in a text file [metrics](./BERT/figures/model_v1/fold_1/metrics_fold_1.txt)
 
 ## Hybrid approach
-In this approach, we are mainly interested in the combined evaluation performance of the 2 models, so we 
+In this approach, we are mainly interested in the combined evaluation performance of the 2 models. Thus, the program will use both Random Forest or distilBERT if RF has confidence below 80%. ![Confusion matrix for hybrid approach](./plots/confusion_matrix_hybrid.png)
