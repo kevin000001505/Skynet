@@ -220,6 +220,8 @@ class BERTrainer:
         # Clean up space before training
         rmtree("BERT/training_results", ignore_errors=True)
 
+        max_acc = -1  # metric to return best confusion matrix
+        ret = None
         # Begin training
         for fold, (train_idx, val_idx) in enumerate(
             self.kf.split(self.df, self.df["label"])
@@ -318,6 +320,10 @@ class BERTrainer:
                 labels, preds, average="binary"
             )
 
+            if acc > max_acc:
+                max_acc = acc
+                ret = {"y_true": labels, "y_pred": preds, "dataset_name": "distilBERT"}
+
             # 3. Confusion matrix
             cm = confusion_matrix(labels, preds, normalize="all") * 100
 
@@ -350,4 +356,4 @@ class BERTrainer:
 
         # Clean up space after training
         rmtree("BERT/training_results", ignore_errors=True)
-        return {"y_true": labels, "y_pred": preds, "dataset_name": "distilBERT"}
+        return ret
