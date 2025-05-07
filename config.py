@@ -72,12 +72,33 @@ MAPPING = {
 }
 
 RANDOM_FOREST_PARAMS = {
-    "min_samples_leaf": 1,
+    "n_estimators": 100,
+    "min_samples_leaf": 2,
+    "min_samples_split": 2,
+    "criterion": "gini",
     "max_features": "sqrt",
     "random_state": 42,
+    "max_depth": None,
     "n_jobs": -1,
+    "bootstrap": True,
     "verbose": 1,
 }
+
+RANDOM_FOREST_GRID_PARAMS = {
+    "rf__n_estimators": [100, 200, 500],  # Number of trees
+    "rf__criterion": ["gini", "entropy"],  # Split criterion
+    "rf__max_depth": [10, 20, None],  # Max depth of trees (None means unlimited)
+    "rf__min_samples_split": [2, 5, 10],  # Minimum samples to split a node
+    "rf__min_samples_leaf": [1, 2, 4],  # Minimum samples at a leaf node
+    "rf__max_features": [
+        "sqrt",
+        "log2",
+    ],
+    "rf__bootstrap": [True],
+}
+
+N_SPLITS = 5
+
 MAX_FEATURES = 2000
 PROBABILITY_THRESHOLD = 0.8
 
