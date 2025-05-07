@@ -218,7 +218,7 @@ class BERTrainer:
         rmtree("BERT/training_results", ignore_errors=True)
 
         # Begin training
-        for fold, (train_idx, val_idx) in enumerate(self.kf.split(self.df)):
+        for fold, (train_idx, val_idx) in enumerate(self.kf.split(self.df, self.df['label'])):
             logging.info(f"Fold {fold + 1}")
 
             training_args = TrainingArguments(
