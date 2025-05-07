@@ -312,7 +312,7 @@ class BERTrainer:
             )
 
             # 3. Confusion matrix
-            cm = confusion_matrix(labels, preds, normalize='true')
+            cm = confusion_matrix(labels, preds, normalize='all') * 100
 
              # 4. Save metrics
             with open(f"{plot_path}/metrics_fold_{fold + 1}.txt", "w") as f:
